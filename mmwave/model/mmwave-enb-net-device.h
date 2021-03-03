@@ -104,6 +104,8 @@ public:
 
   void SetCcMap (std::map< uint8_t, Ptr<MmWaveComponentCarrierEnb> > ccm);
 
+  bool isAdditionalEnb;
+
 protected:
   virtual void DoInitialize (void);
   void UpdateConfig ();

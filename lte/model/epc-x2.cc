@@ -96,6 +96,7 @@ EpcX2::EpcX2 ()
   m_x2SapProvider = new EpcX2SpecificEpcX2SapProvider<EpcX2> (this);
   m_x2PdcpProvider = new EpcX2PdcpSpecificProvider<EpcX2> (this);
   m_x2RlcProvider = new EpcX2RlcSpecificProvider<EpcX2> (this);
+  m_x2PdcpUser = 0;
 }
 
 EpcX2::~EpcX2 ()
@@ -111,10 +112,17 @@ EpcX2::DoDispose (void)
   m_x2InterfaceSockets.clear ();
   m_x2InterfaceCellIds.clear ();
   m_x2RlcUserMap.clear ();
+  m_x2RlcUserMap2.clear ();
   m_x2PdcpUserMap.clear ();
+  m_x2PdcpUserMap2.clear ();
   delete m_x2SapProvider;
   delete m_x2RlcProvider;
   delete m_x2PdcpProvider;
+}
+
+void
+EpcX2::SetEpcX2PdcpUser(EpcX2PdcpUser *s){
+	m_x2PdcpUser =s ;
 }
 
 TypeId
@@ -169,6 +177,17 @@ EpcX2::SetMcEpcX2RlcUser (uint32_t teid, EpcX2RlcUser* rlcUser)
 }
 
 void
+EpcX2::SetMcEpcX2RlcUser2 (uint32_t teid, EpcX2RlcUser* rlcUser)
+{
+  // TODO it may change (for the same teid) on handover between secondary cells, as in LteEnbRrc::RecvRlcSetupRequest
+  //NS_ASSERT_MSG(m_x2RlcUserMap.find(teid) == m_x2RlcUserMap.end(), "Teid " << teid
+  //  << " is already setup\n");
+  NS_LOG_INFO("Add EpcX2RlcUser for teid " << teid);
+  m_x2RlcUserMap2[teid] = rlcUser;
+}
+
+
+void
 EpcX2::SetMcEpcX2PdcpUser (uint32_t teid, EpcX2PdcpUser* pdcpUser)
 {
   // TODO it may change (for the same teid) on handover between secondary cells, as in LteEnbRrc::RecvRlcSetupRequest
@@ -176,6 +195,16 @@ EpcX2::SetMcEpcX2PdcpUser (uint32_t teid, EpcX2PdcpUser* pdcpUser)
   //  << " is already setup\n");
   NS_LOG_INFO("Add EpcX2PdcpUser for teid " << teid);
   m_x2PdcpUserMap[teid] = pdcpUser;
+}
+
+void
+EpcX2::SetMcEpcX2PdcpUser2 (uint32_t teid, EpcX2PdcpUser* pdcpUser)
+{
+  // TODO it may change (for the same teid) on handover between secondary cells, as in LteEnbRrc::RecvRlcSetupRequest
+  //NS_ASSERT_MSG(m_x2PdcpUserMap.find(teid) == m_x2PdcpUserMap.end(), "Teid " << teid
+  //  << " is already setup\n");
+  NS_LOG_INFO("Add EpcX2PdcpUser for teid " << teid);
+  m_x2PdcpUserMap2[teid] = pdcpUser;
 }
 
 // Add X2 endpoint
@@ -194,6 +223,7 @@ EpcX2::AddX2Interface (uint16_t localCellId, Ipv4Address localX2Address, uint16_
   retval = localX2cSocket->Bind (InetSocketAddress (localX2Address, m_x2cUdpPort));
   NS_ASSERT (retval == 0);
   localX2cSocket->SetRecvCallback (MakeCallback (&EpcX2::RecvFromX2cSocket, this));
+
 
   // Create X2-U socket for the local eNB
   Ptr<Socket> localX2uSocket = Socket::CreateSocket (localEnb, TypeId::LookupByName ("ns3::UdpSocketFactory"));
@@ -236,7 +266,7 @@ void
 EpcX2::RecvFromX2cSocket (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-
+  
   NS_LOG_LOGIC ("Recv X2 message: from Socket");
   Ptr<Packet> packet = socket->Recv ();
   NS_LOG_LOGIC ("packetLen = " << packet->GetSize ());
@@ -500,7 +530,9 @@ EpcX2::RecvFromX2cSocket (Ptr<Socket> socket)
       EpcX2SapUser::UeImsiSinrParams params;
       params.ueImsiSinrMap = x2ueSinrUpdateHeader.GetUeImsiSinrMap();
       params.sourceCellId = x2ueSinrUpdateHeader.GetSourceCellId();
-
+      params.secondBestCellId = x2ueSinrUpdateHeader.GetSecondCellId(); 
+      params.m_rnti = x2ueSinrUpdateHeader.GetRnti(); 
+      
       m_x2SapUser->RecvUeSinrUpdate(params);  
     }
   else if (procedureCode == EpcX2Header::RequestMcHandover)
@@ -623,9 +655,15 @@ EpcX2::RecvFromX2uSocket (Ptr<Socket> socket)
       params.ueData->AddByteTag (pdcpTag);
       // call rlc interface
       EpcX2RlcUser* user = m_x2RlcUserMap.find(params.gtpTeid)->second;
-      if(user != 0)
+      EpcX2RlcUser* user2 = m_x2RlcUserMap2.find(params.gtpTeid)->second;
+      if(user != 0 && !isAdditionalMmWave)
       {
         user -> SendMcPdcpSdu(params);
+        NS_LOG_INFO("sendto28G");
+      }
+      else if (user2 != 0 && isAdditionalMmWave){
+        user2 -> SendMcPdcpSdu(params);
+        NS_LOG_INFO("sendto73G");
       }
       else
       {
@@ -1236,7 +1274,10 @@ EpcX2::DoSendMcPdcpPdu(EpcX2Sap::UeDataParams params)
   packet->AddHeader (gtpu);
 
   EpcX2Tag tag (Simulator::Now());
-  packet->AddPacketTag (tag);
+  if (!packet->PeekPacketTag(tag)){
+    packet->AddPacketTag (tag);
+  }
+  
 
   NS_LOG_INFO ("Forward MC UE DATA through X2 interface");
   sourceSocket->SendTo (packet, 0, InetSocketAddress (targetIpAddr, m_x2uUdpPort));  
@@ -1298,6 +1339,8 @@ EpcX2::DoSendUeSinrUpdate(EpcX2Sap::UeImsiSinrParams params)
   EpcX2UeImsiSinrUpdateHeader x2imsiSinrHeader;
   x2imsiSinrHeader.SetUeImsiSinrMap (params.ueImsiSinrMap);
   x2imsiSinrHeader.SetSourceCellId (params.sourceCellId);
+  x2imsiSinrHeader.SetSecondCellId(params.secondBestCellId);
+  x2imsiSinrHeader.SetRnti(params.m_rnti);
 
   EpcX2Header x2Header;
   x2Header.SetMessageType (EpcX2Header::InitiatingMessage);
@@ -1319,6 +1362,7 @@ EpcX2::DoSendUeSinrUpdate(EpcX2Sap::UeImsiSinrParams params)
 
   // Send the X2 message through the socket
   sourceSocket->SendTo (packet, 0, InetSocketAddress (targetIpAddr, m_x2cUdpPort));
+  
 }
 
 

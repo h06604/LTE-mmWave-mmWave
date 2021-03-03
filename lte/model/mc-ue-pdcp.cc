@@ -125,10 +125,20 @@ McUePdcp::SetRnti (uint16_t rnti)
 }
 
 void
-McUePdcp::SetMmWaveRnti (uint16_t rnti)
+McUePdcp::SetMmWaveRnti (uint16_t rnti1)
 {
-  NS_LOG_FUNCTION (this << (uint32_t) rnti);
-  m_mmWaveRnti = rnti;
+  NS_LOG_FUNCTION (this << (uint32_t) rnti1);
+  m_mmWaveRnti_28 = rnti1;
+
+}
+
+void
+McUePdcp::SetMmWaveRnti (uint16_t rnti1, uint16_t rnti2)
+{
+  NS_LOG_FUNCTION (this << (uint32_t) rnti1 << (uint32_t) rnti2);
+  m_mmWaveRnti_28 = rnti1;
+  m_mmWaveRnti_73 = rnti2;
+
 }
 
 void
@@ -164,6 +174,13 @@ McUePdcp::SetMmWaveRlcSapProvider (LteRlcSapProvider * s)
 {
   NS_LOG_FUNCTION (this << s);
   m_mmWaveRlcSapProvider = s;
+}
+
+void
+McUePdcp::SetMmWaveRlcSapProvider2 (LteRlcSapProvider * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_mmWaveRlcSapProvider2 = s;
 }
 
 LteRlcSapUser*

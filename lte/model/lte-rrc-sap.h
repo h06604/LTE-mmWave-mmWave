@@ -692,6 +692,7 @@ public:
   {
     uint64_t ueIdentity; ///< UE identity
     bool isMc;
+    bool isMc_2;
   };
 
   /// RrcConnectionSetup structure
@@ -1081,8 +1082,8 @@ public:
    *        (added to support MC functionalities).
    * \param msg the message
    */
-  virtual void RecvRrcConnectToMmWave (uint16_t mmWaveCellId) = 0;
-
+  //virtual void RecvRrcConnectToMmWave (uint16_t mmWaveCellId) = 0;
+  virtual void RecvRrcConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2) = 0; 
 };
 
 
@@ -1192,7 +1193,8 @@ public:
    * \param rnti the RNTI of the destination UE
    * \param mmWaveCellId the cellId to which connect
    */
-  virtual void SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId) = 0;
+  //virtual void SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId) = 0;
+  virtual void SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t secondMmwaveCellId) = 0;
 
   /**
    * \brief Encode handover prepration information
@@ -1440,7 +1442,8 @@ public:
   virtual void RecvRrcConnectionReestablishmentReject (RrcConnectionReestablishmentReject msg);
   virtual void RecvRrcConnectionRelease (RrcConnectionRelease msg);
   virtual void RecvRrcConnectionReject (RrcConnectionReject msg);
-  virtual void RecvRrcConnectToMmWave (uint16_t mmWaveCellId);
+  //virtual void RecvRrcConnectToMmWave (uint16_t mmWaveCellId);
+  virtual void RecvRrcConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2); 
   virtual void RecvRrcConnectionSwitch (RrcConnectionSwitch msg);
 
 private:
@@ -1517,9 +1520,9 @@ MemberLteUeRrcSapProvider<C>::RecvRrcConnectionReject (RrcConnectionReject msg)
 
 template <class C>
 void
-MemberLteUeRrcSapProvider<C>::RecvRrcConnectToMmWave (uint16_t mmWaveCellId)
+MemberLteUeRrcSapProvider<C>::RecvRrcConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2)
 {
-  Simulator::ScheduleNow (&C::DoRecvRrcConnectToMmWave, m_owner, mmWaveCellId);
+  Simulator::ScheduleNow (&C::DoRecvRrcConnectToMmWave, m_owner, mmWaveCellId, mmWaveCellId_2);
 }
 
 template <class C>
@@ -1559,7 +1562,8 @@ public:
   virtual void SendRrcConnectionRelease (uint16_t rnti, RrcConnectionRelease msg);
   virtual void SendRrcConnectionReject (uint16_t rnti, RrcConnectionReject msg);
   virtual void SendRrcConnectionSwitch (uint16_t rnti, RrcConnectionSwitch msg);
-  virtual void SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId);
+  //virtual void SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId);
+  virtual void SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t secondMmWaveCellId);
   virtual Ptr<Packet> EncodeHandoverPreparationInformation (HandoverPreparationInfo msg);
   virtual HandoverPreparationInfo DecodeHandoverPreparationInformation (Ptr<Packet> p);
   virtual Ptr<Packet> EncodeHandoverCommand (RrcConnectionReconfiguration msg);
@@ -1662,9 +1666,9 @@ MemberLteEnbRrcSapUser<C>::SendRrcConnectionSwitch (uint16_t rnti, RrcConnection
 
 template <class C>
 void
-MemberLteEnbRrcSapUser<C>::SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId)
+MemberLteEnbRrcSapUser<C>::SendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t secondMmWaveCellId)
 {
-  m_owner->DoSendRrcConnectToMmWave (rnti, mmWaveCellId);
+  m_owner->DoSendRrcConnectToMmWave (rnti, mmWaveCellId, secondMmWaveCellId);
 }
 
 template <class C>

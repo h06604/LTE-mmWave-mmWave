@@ -578,12 +578,15 @@ public:
 /**
 //TODO doc
 */
-void SetMessage (uint16_t mmWaveId);
+//void SetMessage (uint16_t mmWaveId);
+void SetMessage (uint16_t mmWaveId, uint16_t mmWaveId_2);
 
 uint16_t GetMessage () const;
+uint16_t GetMessage_secondMmWaveCellId () const;
 
 private:
 std::bitset<16> m_mmWaveId;
+std::bitset<16> m_mmWaveId_2;
 };
 
 class RrcNotifySecondaryConnectedHeader : public RrcUlDcchMessage

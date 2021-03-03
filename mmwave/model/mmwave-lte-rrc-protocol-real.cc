@@ -146,6 +146,7 @@ MmWaveLteUeRrcProtocolReal::DoSendRrcConnectionRequest (LteRrcSap::RrcConnection
 void
 MmWaveLteUeRrcProtocolReal::DoSendRrcConnectionSetupCompleted (LteRrcSap::RrcConnectionSetupCompleted msg)
 {
+  NS_LOG_FUNCTION(this);
   Ptr<Packet> packet = Create<Packet> ();
 
   RrcConnectionSetupCompleteHeader rrcConnectionSetupCompleteHeader;
@@ -228,7 +229,7 @@ MmWaveLteUeRrcProtocolReal::DoSendNotifySecondaryCellConnected (uint16_t mmWaveR
   transmitPdcpSduParameters.rnti = m_rnti;
   transmitPdcpSduParameters.lcid = 1;
 
-  m_setupParameters.srb1SapProvider->TransmitPdcpSdu (transmitPdcpSduParameters);
+  m_setupParameters.srb1SapProvider->TransmitPdcpSdu (transmitPdcpSduParameters); ///will go to MmWaveLteEnbRrcProtocolReal::DoReceivePdcpSdu()
 }
 
 
@@ -390,8 +391,9 @@ MmWaveLteUeRrcProtocolReal::DoReceivePdcpPdu (Ptr<Packet> p)
       // RrcConnectToMmWave
       p->RemoveHeader (rrcConnectToMmWaveHeader);
       uint16_t mmWaveCellId = rrcConnectToMmWaveHeader.GetMessage ();
+      uint16_t mmWaveCellId_2 = rrcConnectToMmWaveHeader.GetMessage_secondMmWaveCellId();
       NS_LOG_INFO ("Recv RRC connect to MmWave cellId " << mmWaveCellId);
-      m_ueRrcSapProvider->RecvRrcConnectToMmWave (mmWaveCellId);
+      m_ueRrcSapProvider->RecvRrcConnectToMmWave (mmWaveCellId, mmWaveCellId_2);
       break;
     }
 }
@@ -551,7 +553,7 @@ MmWaveLteEnbRrcProtocolReal::DoSetupUe (uint16_t rnti, LteEnbRrcSapUser::SetupUe
 
   // Store SetupUeParameters
   m_setupUeParametersMap[rnti] = params;
-
+  //NS_LOG_INFO("dsa "<<m_setupUeParametersMap[rnti].srb0SapProvider);
   LteEnbRrcSapProvider::CompleteSetupUeParameters completeSetupUeParameters;
   std::map<uint16_t, LteEnbRrcSapProvider::CompleteSetupUeParameters>::iterator
     csupIt = m_completeSetupUeParametersMap.find (rnti);
@@ -622,6 +624,8 @@ MmWaveLteEnbRrcProtocolReal::DoSendSystemInformation (uint16_t cellId, LteRrcSap
               if (mcUeDev != 0)
                 {
                   ueRrc = mcUeDev->GetLteRrc ();
+                  //NS_LOG_INFO(mcUeDev->GetMmWaveRrc()<<"dddsss"<<mcUeDev->GetMmWaveRrc ()->GetCellId());
+                  //NS_LOG_INFO(mcUeDev->GetMmWaveRrc2()<<"sssddd"<<mcUeDev->GetMmWaveRrc2 ()->GetCellId());                 
                   NS_LOG_LOGIC ("considering UE IMSI " << mcUeDev->GetImsi () << " that has cellId " << ueRrc->GetCellId ());
                   if (ueRrc->GetCellId () == cellId)
                     {
@@ -634,10 +638,18 @@ MmWaveLteEnbRrcProtocolReal::DoSendSystemInformation (uint16_t cellId, LteRrcSap
                     } //if the first condition is false, the second is not executed
                   else if (mcUeDev->GetMmWaveRrc () != 0 && mcUeDev->GetMmWaveRrc ()->GetCellId () == cellId)
                     {
-                      NS_LOG_LOGIC ("sending SI to IMSI " << mcUeDev->GetImsi ());
+                      NS_LOG_LOGIC ("sending mmWave eNB1 SI to IMSI " << mcUeDev->GetImsi ());
                       Simulator::Schedule (RRC_REAL_MSG_DELAY,
                                            &LteUeRrcSapProvider::RecvSystemInformation,
                                            mcUeDev->GetMmWaveRrc ()->GetLteUeRrcSapProvider (),
+                                           msg);
+                    }
+                  else if (mcUeDev->GetMmWaveRrc2 () != 0 && mcUeDev->GetMmWaveRrc2 ()->GetCellId () == cellId)
+                    {
+                      NS_LOG_LOGIC ("sending mmWave eNB2 SI to IMSI " << mcUeDev->GetImsi ());
+                      Simulator::Schedule (RRC_REAL_MSG_DELAY,
+                                           &LteUeRrcSapProvider::RecvSystemInformation,
+                                           mcUeDev->GetMmWaveRrc2 ()->GetLteUeRrcSapProvider (),
                                            msg);
                     }
                 }
@@ -668,8 +680,9 @@ MmWaveLteEnbRrcProtocolReal::DoSendSystemInformation (uint16_t cellId, LteRrcSap
 void
 MmWaveLteEnbRrcProtocolReal::DoSendRrcConnectionSetup (uint16_t rnti, LteRrcSap::RrcConnectionSetup msg)
 {
+  NS_LOG_FUNCTION(this);
   Ptr<Packet> packet = Create<Packet> ();
-
+  
   RrcConnectionSetupHeader rrcConnectionSetupHeader;
   rrcConnectionSetupHeader.SetMessage (msg);
 
@@ -686,6 +699,7 @@ MmWaveLteEnbRrcProtocolReal::DoSendRrcConnectionSetup (uint16_t rnti, LteRrcSap:
     }
   else
     {
+      //NS_LOG_INFO("aaaa" << packet.GetSize());
       NS_LOG_INFO ("Queue RRC connection setup " << packet << " rnti " << rnti << " cellId " << m_cellId);
       m_setupUeParametersMap[rnti].srb0SapProvider->TransmitPdcpPdu (transmitPdcpPduParameters);
     }
@@ -729,13 +743,13 @@ MmWaveLteEnbRrcProtocolReal::DoSendRrcConnectionSwitch (uint16_t rnti, LteRrcSap
 }
 
 void
-MmWaveLteEnbRrcProtocolReal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveId)
+MmWaveLteEnbRrcProtocolReal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveId, uint16_t secondMmWaveCellId)
 {
   NS_LOG_FUNCTION (this << " rnti " << rnti << " mmWave cellId " << mmWaveId);
   Ptr<Packet> packet = Create<Packet> ();
 
   RrcConnectToMmWaveHeader connectToMmWaveHeader;
-  connectToMmWaveHeader.SetMessage (mmWaveId);
+  connectToMmWaveHeader.SetMessage(mmWaveId,secondMmWaveCellId);
 
   packet->AddHeader (connectToMmWaveHeader);
 

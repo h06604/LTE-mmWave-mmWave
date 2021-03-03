@@ -29,7 +29,7 @@
 #include <ns3/object.h>
 #include <ns3/lte-as-sap.h>
 #include <ns3/epc-tft-classifier.h>
-
+#include <ns3/mmwave-enb-phy.h>
 namespace ns3 {
 
 
@@ -40,7 +40,7 @@ class EpcUeNas : public Object
   /// allow MemberLteAsSapUser<EpcUeNas> class friend access
   friend class MemberLteAsSapUser<EpcUeNas>;
 public:
-
+  std::map<uint64_t, Ptr<ns3::mmwave::MmWaveEnbPhy>> cellIdMmWavePhy;
   /**
    * Constructor
    */
@@ -105,6 +105,7 @@ public:
    * \param s the AS SAP provider
    */
   void SetMmWaveAsSapProvider (LteAsSapProvider* s);
+  void SetMmWaveAsSapProvider2 (LteAsSapProvider* s);
 
   /**
    * set the callback used to forward data packets up the stack
@@ -188,7 +189,8 @@ public:
     IDLE_REGISTERED,
     CONNECTING_TO_EPC,
     ACTIVE,
-    NUM_STATES
+    NUM_STATES,
+    SECOND_ACTIVE
   };
 
   /**
@@ -212,7 +214,8 @@ private:
 
   void DoNotifyConnectionSuccessful (uint16_t rnti);
   void DoNotifyHandoverSuccessful (uint16_t rnti, uint16_t mmWaveCellId);
-  void DoNotifyConnectToMmWave (uint16_t mmWaveCellId);
+  //void DoNotifyConnectToMmWave (uint16_t mmWaveCellId);
+  void DoNotifyConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2); 
   /// Notify connection failed
   void DoNotifyConnectionFailed ();
   /// Notify connection released
@@ -262,6 +265,7 @@ private:
   /// LTE SAP user
   LteAsSapUser* m_asSapUser;
   LteAsSapProvider* m_mmWaveAsSapProvider;
+  LteAsSapProvider* m_mmWaveAsSapProvider2;
 
   uint8_t m_bidCounter; ///< bid counter
   EpcTftClassifier m_tftClassifier; ///< tft classifier
@@ -277,7 +281,8 @@ private:
 
   std::list<BearerToBeActivated> m_bearersToBeActivatedList; ///< bearers to be activated list
 
-  uint16_t m_mmWaveCellId;
+  uint16_t m_mmWaveCellId,m_mmWaveCellId_2;
+  uint16_t m_mmWaveRnti_73G, m_mmWaveRnti_28G;//28代表先連接的 73代表後連接的 
   uint16_t m_dlEarfcn; // TODO maybe useless
 
 };

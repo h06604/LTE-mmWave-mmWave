@@ -100,6 +100,7 @@ public:
    * \brief Tell the RRC that a secondary cell was connected
    *
    */
+  virtual void NotifySecondaryCellConnected (uint16_t rnti,uint16_t rnti2, uint16_t mmWaveCellId1, uint16_t mmWaveCellId2) = 0;
   virtual void NotifySecondaryCellConnected (uint16_t rnti, uint16_t mmWaveCellId) = 0;
 
   /**
@@ -139,7 +140,8 @@ public:
    * \brief Notify the NAS that LTE RRC received an indication to connect to a MmWave eNB
    *
    */
-  virtual void NotifyConnectToMmWave (uint16_t mmWaveCellId) = 0;
+  //virtual void NotifyConnectToMmWave (uint16_t mmWaveCellId) = 0;
+  virtual void NotifyConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2) = 0;
 
   /**
    * \brief Notify the NAS that RRC Connection Establishment failed.
@@ -189,6 +191,7 @@ public:
   virtual void Connect (void);
   virtual void SendData (Ptr<Packet> packet, uint8_t bid);
   virtual void Disconnect ();
+  virtual void NotifySecondaryCellConnected (uint16_t rnti,uint16_t rnti2, uint16_t mmWaveCellId, uint16_t mmWaveCellId2);
   virtual void NotifySecondaryCellConnected (uint16_t rnti, uint16_t mmWaveCellId);
   virtual void NotifySecondaryCellHandover (uint16_t oldRnti, uint16_t newRnti, uint16_t mmWaveCellId, LteRrcSap::RadioResourceConfigDedicated radioResourceConfigDedicated);
 
@@ -252,6 +255,13 @@ MemberLteAsSapProvider<C>::Disconnect ()
 
 template <class C>
 void
+MemberLteAsSapProvider<C>::NotifySecondaryCellConnected (uint16_t rnti1, uint16_t rnti2, uint16_t mmWaveCellId1, uint16_t mmWaveCellId2) 
+{
+  m_owner->DoNotifySecondaryCellConnected (rnti1,rnti2,  mmWaveCellId1, mmWaveCellId2);
+}
+
+template <class C>
+void
 MemberLteAsSapProvider<C>::NotifySecondaryCellConnected (uint16_t rnti, uint16_t mmWaveCellId)
 {
   m_owner->DoNotifySecondaryCellConnected (rnti, mmWaveCellId);
@@ -284,7 +294,8 @@ public:
   // inherited from LteAsSapUser
   virtual void NotifyConnectionSuccessful (uint16_t rnti);
   virtual void NotifyHandoverSuccessful (uint16_t rnti, uint16_t mmWaveCellId);
-  virtual void NotifyConnectToMmWave (uint16_t mmWaveCellId);
+  //virtual void NotifyConnectToMmWave (uint16_t mmWaveCellId);
+  virtual void NotifyConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2);
   virtual void NotifyConnectionFailed ();
   virtual void RecvData (Ptr<Packet> packet);
   virtual void NotifyConnectionReleased ();
@@ -322,9 +333,9 @@ MemberLteAsSapUser<C>::NotifyHandoverSuccessful (uint16_t rnti, uint16_t mmWaveC
 
 template <class C>
 void
-MemberLteAsSapUser<C>::NotifyConnectToMmWave (uint16_t mmWaveCellId)
+MemberLteAsSapUser<C>::NotifyConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2)
 {
-  m_owner->DoNotifyConnectToMmWave (mmWaveCellId);
+  m_owner->DoNotifyConnectToMmWave (mmWaveCellId, mmWaveCellId_2);
 }
 
 template <class C>

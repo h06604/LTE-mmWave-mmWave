@@ -30,6 +30,7 @@
 #include "epc-ue-nas.h"
 #include "lte-as-sap.h"
 
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("EpcUeNas");
@@ -69,6 +70,7 @@ EpcUeNas::EpcUeNas ()
   NS_LOG_FUNCTION (this);
   m_asSapUser = new MemberLteAsSapUser<EpcUeNas> (this);
   m_mmWaveAsSapProvider = 0;
+  m_mmWaveAsSapProvider2 = 0;
 }
 
 
@@ -148,6 +150,14 @@ EpcUeNas::SetMmWaveAsSapProvider (LteAsSapProvider* s)
   NS_LOG_FUNCTION (this << s);
   m_mmWaveAsSapProvider = s;
 }
+
+void
+EpcUeNas::SetMmWaveAsSapProvider2 (LteAsSapProvider* s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_mmWaveAsSapProvider2 = s;
+}
+
 
 void
 EpcUeNas::SetForwardUpCallback (Callback <void, Ptr<Packet> > cb)
@@ -267,11 +277,18 @@ EpcUeNas::DoNotifyConnectionSuccessful (uint16_t rnti)
   {
     case ACTIVE: // this means the Master LTE Cell was already connected
       {
+        SwitchToState(SECOND_ACTIVE);
+        m_mmWaveRnti_28G = rnti;
+        
         // notify the LTE eNB RRC that a secondary cell is available
-        m_asSapProvider->NotifySecondaryCellConnected(rnti, m_mmWaveCellId);
+        //m_asSapProvider->NotifySecondaryCellConnected(rnti, m_mmWaveCellId);
       }
       break;
-
+    case SECOND_ACTIVE:
+      {
+        m_mmWaveRnti_73G = rnti;
+        m_asSapProvider->NotifySecondaryCellConnected(m_mmWaveRnti_28G,m_mmWaveRnti_73G, m_mmWaveCellId, m_mmWaveCellId_2);
+      }
     default:
       SwitchToState (ACTIVE); // will eventually activate dedicated bearers
       break;
@@ -299,22 +316,35 @@ EpcUeNas::DoNotifyHandoverSuccessful (uint16_t rnti, uint16_t mmWaveCellId)
 }
 
 void
-EpcUeNas::DoNotifyConnectToMmWave(uint16_t mmWaveCellId)
+EpcUeNas::DoNotifyConnectToMmWave(uint16_t mmWaveCellId, uint16_t mmWaveCellId_2)
 {
-  NS_LOG_LOGIC(mmWaveCellId);
+  //NS_LOG_LOGIC(mmWaveCellId);
+  NS_LOG_FUNCTION (this << mmWaveCellId << mmWaveCellId_2);
   m_mmWaveCellId = mmWaveCellId;
-
-  if(m_mmWaveAsSapProvider != 0) {
-
+  if (mmWaveCellId && mmWaveCellId_2)
+  {
+    m_mmWaveCellId_2 = mmWaveCellId_2;
+    m_mmWaveCellId = mmWaveCellId;
+    //預先儲存等待後面第二次mmWave eNB的連接
+  }
+  
+  if(m_mmWaveAsSapProvider != 0  && m_state==ACTIVE) {
     NS_ASSERT_MSG(mmWaveCellId > 0, "Invalid CellId");
 
     NS_LOG_INFO("Connect to cell " << mmWaveCellId);
     // force the UE RRC to be camped on a specific eNB
     m_mmWaveAsSapProvider->ForceCampedOnEnb (mmWaveCellId, m_dlEarfcn); // TODO probably the second argument is useless
-
+    cellIdMmWavePhy[m_mmWaveCellId]->isAddtionalMmWavPhy = false;
     // tell RRC to go into connected mode
     m_mmWaveAsSapProvider->Connect ();
-  } else {
+  }else if (m_mmWaveAsSapProvider2 != 0 && m_state==SECOND_ACTIVE){
+    NS_ASSERT_MSG(m_mmWaveCellId_2 > 0, "Invalid CellId");
+    NS_LOG_INFO("Connect to cell " << m_mmWaveCellId_2);
+    cellIdMmWavePhy[m_mmWaveCellId_2]->isAddtionalMmWavPhy = true;
+    m_mmWaveAsSapProvider2->ForceCampedOnEnb (m_mmWaveCellId_2, m_dlEarfcn);
+    m_mmWaveAsSapProvider2->Connect ();
+  } 
+  else {
     NS_LOG_WARN("Trying to connect to a secondary cell a non MC capable device");
   }
 

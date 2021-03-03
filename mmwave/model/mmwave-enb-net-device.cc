@@ -105,6 +105,7 @@ MmWaveEnbNetDevice::MmWaveEnbNetDevice ()
     m_isConfigured (false)
 {
   NS_LOG_FUNCTION (this);
+  isAdditionalEnb = false;
 }
 
 MmWaveEnbNetDevice::~MmWaveEnbNetDevice ()

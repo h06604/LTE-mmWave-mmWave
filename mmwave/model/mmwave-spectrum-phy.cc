@@ -305,7 +305,7 @@ MmWaveSpectrumPhy::SetPhyUlHarqFeedbackCallback (MmWavePhyUlHarqFeedbackCallback
 void
 MmWaveSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> params)
 {
-
+  //NS_LOG_FUNCTION(this << " " << isAdditionalMmWave);
   NS_LOG_FUNCTION (this);
 
   Ptr<MmWaveEnbNetDevice> EnbTx =
@@ -328,21 +328,26 @@ MmWaveSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> params)
       ueRx = DynamicCast<mmwave::MmWaveUeNetDevice> (GetDevice ());
       Ptr<McUeNetDevice> rxMcUe = 0;
       rxMcUe = DynamicCast<McUeNetDevice> (GetDevice ());
-
       if ((ueRx != 0) && (ueRx->GetPhy (m_componentCarrierId)->IsReceptionEnabled () == false))
         {               // if the first cast is 0 (the device is MC) then this if will not be executed
           isAllocated = false;
         }
-      else if ((rxMcUe != 0) && (rxMcUe->GetMmWavePhy (m_componentCarrierId)->IsReceptionEnabled () == false))
+      else if ((rxMcUe != 0) && (rxMcUe->GetMmWavePhy (m_componentCarrierId)->IsReceptionEnabled () == false)  && !isAdditionalMmWave)
+        {               // this is executed if the device is MC and is transmitting
+          isAllocated = false;
+          
+        }
+      else if ((rxMcUe != 0) && (rxMcUe->GetMmWavePhy2 (m_componentCarrierId)->IsReceptionEnabled () == false) && isAdditionalMmWave)
         {               // this is executed if the device is MC and is transmitting
           isAllocated = false;
         }
-
+NS_LOG_INFO (this<<" Hz cellid0 " << mmwaveDataRxParams->cellId<< " "<< isAllocated <<" "<<isAdditionalMmWave);
       if (isAllocated)
         {
           m_interferenceData->AddSignal (mmwaveDataRxParams->psd, mmwaveDataRxParams->duration);
           if (mmwaveDataRxParams->cellId == m_cellId)
             {
+              NS_LOG_INFO (this<<" Hz cellid1 " << mmwaveDataRxParams->cellId<< " "<< isAllocated <<" "<<isAdditionalMmWave);
               //m_interferenceData->AddSignal (mmwaveDataRxParams->psd, mmwaveDataRxParams->duration);
               StartRxData (mmwaveDataRxParams);
             }
@@ -403,6 +408,7 @@ MmWaveSpectrumPhy::StartRxData (Ptr<MmwaveSpectrumSignalParametersDataFrame> par
       {
         if (params->cellId == m_cellId)
           {
+            NS_LOG_INFO (" Hz m_cellId " << m_cellId);
             if (m_rxPacketBurstList.empty ())
               {
                 NS_ASSERT (m_state == IDLE);
@@ -675,7 +681,13 @@ MmWaveSpectrumPhy::EndRxData ()
                   Ptr<McUeNetDevice> mcUe = DynamicCast<McUeNetDevice> (ueRx);
                   if (mcUe != 0)
                     {
-                      Ptr<MmWaveEnbNetDevice> mmWaveEnb = mcUe->GetMmWaveTargetEnb ();
+                      Ptr<MmWaveEnbNetDevice> mmWaveEnb;
+                      if(isAdditionalMmWave){
+                        mmWaveEnb = mcUe->GetMmWaveTargetEnb2 ();
+                      }else{
+                        mmWaveEnb = mcUe->GetMmWaveTargetEnb ();
+                      }
+                      
                       if (mmWaveEnb != 0)
                         {
                           //traceParams.m_cellId = mmWaveEnb->GetCellId(); //now m_cellId is set correctly
@@ -820,6 +832,7 @@ MmWaveSpectrumPhy::EndRxCtrl ()
 bool
 MmWaveSpectrumPhy::StartTxDataFrames (Ptr<PacketBurst> pb, std::list<Ptr<MmWaveControlMessage> > ctrlMsgList, Time duration, uint8_t slotInd)
 {
+  NS_LOG_FUNCTION(this << " "<<isAdditionalMmWave);
   switch (m_state)
     {
     case RX_DATA:
@@ -884,8 +897,8 @@ MmWaveSpectrumPhy::StartTxDataFrames (Ptr<PacketBurst> pb, std::list<Ptr<MmWaveC
 bool
 MmWaveSpectrumPhy::StartTxDlControlFrames (std::list<Ptr<MmWaveControlMessage> > ctrlMsgList, Time duration)
 {
-  NS_LOG_LOGIC (this << " state: " << m_state);
-
+  NS_LOG_LOGIC (this << " state: " << m_state << " " << isAdditionalMmWave);
+  //NS_LOG_LOGIC (this << " state: " << m_state);
   switch (m_state)
     {
     case RX_DATA:

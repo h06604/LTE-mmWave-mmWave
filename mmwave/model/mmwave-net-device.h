@@ -85,6 +85,9 @@ public:
   Ipv4Address GetPacketDestination (Ptr<Packet> packet);
 
   void Receive (Ptr<Packet> p);
+
+  bool isEnbTypeForDc;
+
 protected:
   NetDevice::ReceiveCallback m_rxCallback;
 private:

@@ -1012,7 +1012,6 @@ LteUePhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgLi
         }
       else if (msg->GetMessageType () == LteControlMessage::MIB)
         {
-          NS_LOG_INFO ("received MIB");
           NS_ASSERT (m_cellId > 0);
           Ptr<MibLteControlMessage> msg2 = DynamicCast<MibLteControlMessage> (msg);
           m_ueCphySapUser->RecvMasterInformationBlock (m_cellId, msg2->GetMib ());

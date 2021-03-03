@@ -95,6 +95,9 @@ public:
    */
   void SetRnti (uint16_t rnti);
 
+
+  void SetImsi (uint16_t imsi);
+  void SetDrbId(uint8_t drbId); 
   /**
    *
    *
@@ -220,10 +223,10 @@ protected:
 
   LteMacSapUser* m_macSapUser; ///< MAC SAP user
   LteMacSapProvider* m_macSapProvider; ///< MAC SAP provider
-
+  uint16_t m_imsi;
   uint16_t m_rnti; ///< RNTI
   uint8_t m_lcid; ///< LCID
-
+  uint8_t m_drbId;
   /**
    * Used to inform of a PDU delivery to the MAC SAP provider
    */

@@ -380,6 +380,8 @@ public:
   {
     uint16_t    sourceCellId;
     uint16_t    targetCellId;
+    uint16_t    secondBestCellId=0;
+    uint16_t 	m_rnti;
     std::map<uint64_t, double> ueImsiSinrMap;
   };
 
@@ -496,7 +498,11 @@ public:
 
   virtual void SetEpcX2PdcpUser (uint32_t teid, EpcX2PdcpUser * s) = 0;
 
+  virtual void SetEpcX2PdcpUser2 (uint32_t teid, EpcX2PdcpUser * s) = 0;
+
   virtual void SetEpcX2RlcUser (uint32_t teid, EpcX2RlcUser * s) = 0;
+
+  virtual void SetEpcX2RlcUser2 (uint32_t teid, EpcX2RlcUser * s) = 0;
 
   virtual void SendRlcSetupRequest (RlcSetupRequest params) = 0;
 
@@ -673,7 +679,11 @@ public:
 
   virtual void SetEpcX2PdcpUser (uint32_t teid, EpcX2PdcpUser * s);
 
+  virtual void SetEpcX2PdcpUser2 (uint32_t teid, EpcX2PdcpUser * s);
+
   virtual void SetEpcX2RlcUser (uint32_t teid, EpcX2RlcUser * s);
+
+  virtual void SetEpcX2RlcUser2 (uint32_t teid, EpcX2RlcUser * s);
 
   virtual void SendRlcSetupRequest (RlcSetupRequest params);
 
@@ -781,10 +791,25 @@ EpcX2SpecificEpcX2SapProvider<C>::SetEpcX2RlcUser (uint32_t teid, EpcX2RlcUser *
 
 template <class C>
 void
+EpcX2SpecificEpcX2SapProvider<C>::SetEpcX2RlcUser2 (uint32_t teid, EpcX2RlcUser * s)
+{
+  m_x2->SetMcEpcX2RlcUser2 (teid, s);
+}
+
+template <class C>
+void
 EpcX2SpecificEpcX2SapProvider<C>::SetEpcX2PdcpUser (uint32_t teid, EpcX2PdcpUser * s)
 {
   m_x2->SetMcEpcX2PdcpUser (teid, s);
 }
+
+template <class C>
+void
+EpcX2SpecificEpcX2SapProvider<C>::SetEpcX2PdcpUser2 (uint32_t teid, EpcX2PdcpUser * s)
+{
+  m_x2->SetMcEpcX2PdcpUser2 (teid, s);
+}
+
 
 template <class C>
 void

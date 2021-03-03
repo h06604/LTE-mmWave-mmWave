@@ -164,6 +164,7 @@ public:
    */
   void SetLteUeCphySapProvider (LteUeCphySapProvider * s);
   void SetMmWaveUeCphySapProvider (LteUeCphySapProvider * s);
+  void SetMmWaveUeCphySapProvider2 (LteUeCphySapProvider * s);
   /**
    * set the CPHY SAP this RRC should use to interact with the PHY
    *
@@ -189,6 +190,9 @@ public:
 
   void SetMmWaveUeCmacSapProvider (LteUeCmacSapProvider * s, uint8_t index);
 
+  void SetMmWaveUeCmacSapProvider2 (LteUeCmacSapProvider * s);
+
+  void SetMmWaveUeCmacSapProvider2 (LteUeCmacSapProvider * s, uint8_t index);
 
   /**
    * set the CMAC SAP this RRC should interact with
@@ -241,7 +245,7 @@ public:
    */
   void SetLteMacSapProvider (LteMacSapProvider* s);
   void SetMmWaveMacSapProvider (LteMacSapProvider* s);
-
+  void SetMmWaveMacSapProvider2 (LteMacSapProvider* s);
   /**
    * Set the AS SAP user to interact with the NAS entity
    *
@@ -450,6 +454,7 @@ private:
   /// Disconnect function
   void DoDisconnect ();
   void DoNotifySecondaryCellConnected (uint16_t mmWaveRnti, uint16_t mmWaveCellId);
+  void DoNotifySecondaryCellConnected (uint16_t mmWaveRnti_28G,uint16_t mmWaveRnti_73G,  uint16_t mmWaveCellId_28G, uint16_t mmWaveCellId_73G);
   void DoNotifySecondaryCellHandover (uint16_t oldRnti, uint16_t newRnti, uint16_t mmWaveCellId, LteRrcSap::RadioResourceConfigDedicated rrcd);
 
 
@@ -521,7 +526,8 @@ private:
    */
   void DoRecvRrcConnectionReject (LteRrcSap::RrcConnectionReject msg);
   /// Part of the RRC protocol. Implement the LteUeRrcSapProvider::RecvRrcConnectToMmWave interface.
-  void DoRecvRrcConnectToMmWave (uint16_t mmWaveCellId);
+  //void DoRecvRrcConnectToMmWave (uint16_t mmWaveCellId);
+  void DoRecvRrcConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2);
   /// Part of the RRC protocol. Implement the LteUeRrcSapProvider:;RecvRrcConnectionSwitch interface.
   void DoRecvRrcConnectionSwitch (LteRrcSap::RrcConnectionSwitch msg);
 
@@ -766,22 +772,28 @@ private:
   // CphyProviders for InterRat handover between MmWave and LTE
   std::vector<LteUeCphySapProvider*> m_lteCphySapProvider;
   std::vector<LteUeCphySapProvider*> m_mmWaveCphySapProvider;
+  std::vector<LteUeCphySapProvider*> m_mmWaveCphySapProvider2;
 
   std::vector<LteUeCmacSapUser*> m_cmacSapUser; ///< UE CMac SAP user
   std::vector<LteUeCmacSapProvider*> m_cmacSapProvider; ///< UE CMac SAP provider
   // CmacProviders for InterRat handover between MmWave and LTE
   std::vector<LteUeCmacSapProvider*> m_lteCmacSapProvider;
   std::vector<LteUeCmacSapProvider*> m_mmWaveCmacSapProvider;
+  std::vector<LteUeCmacSapProvider*> m_mmWaveCmacSapProvider2;
 
   //interfaces for RRC protocol
   LteUeRrcSapUser* m_rrcSapUser; ///< RRC SAP user
   LteUeRrcSapProvider* m_rrcSapProvider; ///< RRC SAP provider
 
   LteMacSapProvider* m_macSapProvider; ///< MAC SAP provider
+  LteMacSapProvider* m_macSapProvider2;
   LtePdcpSapUser* m_drbPdcpSapUser; ///< DRB PDCP SAP user
   // MacProviders for InterRat handover between MmWave and LTE
   LteMacSapProvider* m_lteMacSapProvider;
+  LteMacSapProvider* m_lteMacSapProvider2;
+
   LteMacSapProvider* m_mmWaveMacSapProvider;
+  LteMacSapProvider* m_mmWaveMacSapProvider2;
 
   LteAsSapProvider* m_asSapProvider; ///< AS SAP provider
   LteAsSapUser* m_asSapUser; ///< AS SAP user
@@ -802,6 +814,7 @@ private:
    */
   uint16_t m_rnti;
   uint16_t m_mmWaveRnti;
+  uint16_t m_mmWaveRnti_73, m_mmWaveRnti_28;
   /**
    * The `CellId` attribute. Serving cell identifier.
    */
@@ -1245,7 +1258,9 @@ private:
    */
   void ConnectionTimeout ();
   bool m_isSecondaryRRC;
+  bool m_isThirdRrc;
   uint16_t m_mmWaveCellId;
+  uint16_t m_mmWaveCellId_28G, m_mmWaveCellId_73G;//73G代表第一個連線 28G代表第二個連線
 
   std::map<uint16_t, bool> m_isMmWaveCellMap;
   bool m_interRatHoCapable;
@@ -1266,6 +1281,8 @@ public:
    * The number of mmWave component carriers. This is used in McUeDevs.
    */
   uint16_t m_numberOfMmWaveComponentCarriers;
+
+  uint16_t sw = 0;
 
 }; // end of class LteUeRrc
 

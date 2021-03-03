@@ -159,8 +159,10 @@ public:
 
   // set if this is a MC device
   void SetIsMc (bool isMc);
+  void SetIsMc_2 (bool isMc);
   // know if this is a MC device
   bool GetIsMc (void) const;
+  bool GetIsMc_2 (void) const ;
   /**
    * Setup a new data radio bearer, including both the configuration
    * within the eNB and the necessary RRC signaling with the UE
@@ -416,6 +418,8 @@ public:
     // for interRatHandover mode
     void SetFirstConnection();
 
+    void SetSecondMmWaveCellID(uint16_t);
+
     // for mc devices, get the m_allMmWaveInOutageAtInitialAccess variable
     bool GetAllMmWaveInOutageAtInitialAccess();
     void SetAllMmWaveInOutageAtInitialAccess(bool param);
@@ -462,7 +466,7 @@ private:
    */
   void ForwardRlcBuffers(Ptr<LteRlc> rlc, Ptr<LtePdcp> pdcp, uint32_t gtpTeid, bool mcLteToMmWaveForwarding, bool mcMmToMmWaveForwarding, uint8_t bid);
 
-
+  uint16_t Mc_Count = 0;
   bool m_firstConnection;
   bool m_receivedLteMmWaveHandoverCompleted;
   uint16_t m_queuedHandoverRequestCellId;
@@ -623,6 +627,7 @@ private:
                                    // LTE eNB will select the best mmWaveCell and will send the
                                    // ConnectToMmWave command to the UE
 
+  bool mmWave1sendTommWave2;
   /**
    * The `StateTransition` trace source. Fired upon every UE state transition
    * seen by the UeManager at the eNB RRC. Exporting IMSI, cell ID, RNTI, old
@@ -639,13 +644,17 @@ private:
   uint16_t m_sourceX2apId;
   uint16_t m_sourceCellId;
   uint16_t m_targetCellId;
+  uint16_t m_secondMmWaveCellID;
   std::list<uint8_t> m_drbsToBeStarted;
   bool m_needPhyMacConfiguration;
 
   uint16_t m_mmWaveCellId;
+  uint16_t m_mmWaveCellId_first;
   uint16_t m_mmWaveRnti;
+  uint16_t m_mmWaveRnti_73;
   bool m_mmWaveCellAvailableForMcSetup;
   bool m_isMc;
+  bool m_isMc_2;
   //bool m_isInterRatHoCapable;
 
   /**
@@ -764,6 +773,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
+  std::map<uint16_t, uint16_t> ImsiTosecondCellRnti;
+  uint16_t GetRntifromCellIDAndImsi[60][60];
 
   /**
    * Set the X2 SAP this RRC should interact with
@@ -776,6 +787,8 @@ public:
    * \return s the X2 SAP User interface offered to the X2 entity by this RRC entity
    */
   EpcX2SapUser* GetEpcX2SapUser ();
+
+  EpcX2SapProvider* GetEpcX2SapProvider();
 
   /**
    * Set the X2 PDCP Provider this RRC should pass to PDCP layers
@@ -1075,7 +1088,7 @@ public:
    * \param m_cellId
    */
   uint16_t GetCellId () const;
-
+  uint16_t GetLteCellId();
 
   /**
    * set the cell id of this eNB
@@ -1273,6 +1286,8 @@ public:
    uint64_t GetImsiFromRnti(uint16_t rnti);
 
    void SetInterRatHoMode ();
+
+   uint16_t secondBestCellId = 0;
 
 private:
 
@@ -1529,7 +1544,8 @@ private:
 
 
 public:
-
+  uint16_t m_secondMmWave_m_rnti;
+  uint16_t m_firstCellId;
   /**
    * Add a neighbour with an X2 interface
    *
@@ -1569,6 +1585,7 @@ public:
    * simulation.
    */
   void SetCsgId (uint32_t csgId, bool csgIndication);
+  bool isAdditionalMmWave = false;
 
 private:
 
@@ -1644,6 +1661,8 @@ private:
    * @params the value of the SINR for this cell
    */
   void TttBasedHandover(std::map<uint64_t, CellSinrMap>::iterator imsiIter, double sinrDifference, uint16_t maxSinrCellId, double maxSinrDb);
+  void TttBasedHandover_mmWave1(std::map<uint64_t, CellSinrMap>::iterator imsiIter, double sinrDifference, uint16_t maxSinrCellId, double maxSinrDb);
+  void TttBasedHandover_mmWave2(std::map<uint64_t, CellSinrMap>::iterator imsiIter, double sinrDifference, uint16_t maxSinrCellId, double maxSinrDb);
 
   /**
    * Compute the TTT according to the sinrDifference and the dynamic handover algorithm
@@ -1910,7 +1929,9 @@ private:
   std::map<uint16_t, ImsiSinrMap> m_cellSinrMap;
   uint16_t m_numNewSinrReports;
   std::map<uint64_t, uint16_t> m_bestMmWaveCellForImsiMap;
+  std::map<uint64_t, uint16_t> m_bestMmWaveCellForImsiMap2;
   std::map<uint64_t, uint16_t> m_lastMmWaveCell;
+  std::map<uint64_t, uint16_t> m_lastMmWaveCell2;
   std::map<uint64_t, bool> m_mmWaveCellSetupCompleted;
   std::map<uint64_t, bool> m_imsiUsingLte;
   std::map<uint64_t, CellSinrMap> m_imsiCellSinrMap;

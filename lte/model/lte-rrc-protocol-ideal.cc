@@ -433,12 +433,12 @@ LteEnbRrcProtocolIdeal::DoSendRrcConnectionSwitch (uint16_t rnti, LteRrcSap::Rrc
 }
 
 void
-LteEnbRrcProtocolIdeal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId)
+LteEnbRrcProtocolIdeal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t mmWaveCellId_2)
 {
   Simulator::Schedule (RRC_IDEAL_MSG_DELAY,
            &LteUeRrcSapProvider::RecvRrcConnectToMmWave,
            GetUeRrcSapProvider (rnti),
-           mmWaveCellId);
+           mmWaveCellId, mmWaveCellId_2);
 }
 
 /*

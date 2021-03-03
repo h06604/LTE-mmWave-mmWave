@@ -184,6 +184,8 @@ public:
    */
   bool GetUseMmWaveConnection() const;
 
+  void SetTargetCellIds(uint16_t targetCellId1, uint16_t targetCellId2);
+
 protected:
   // Interface provided to upper RRC entity
   virtual void DoTransmitPdcpSdu (Ptr<Packet> p);
@@ -200,6 +202,7 @@ protected:
   uint16_t m_rnti;
   uint8_t m_lcid;
   uint16_t m_mmWaveRnti;
+  uint16_t m_targetCellId1, m_targetCellId2;
 
   /**
    * Used to inform of a PDU delivery to the RLC SAP provider.

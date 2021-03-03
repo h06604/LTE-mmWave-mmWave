@@ -353,7 +353,8 @@ LteUeRrcProtocolReal::DoReceivePdcpPdu (Ptr<Packet> p)
       // RrcConnectToMmWave
       p->RemoveHeader (rrcConnectToMmWaveHeader);
       uint16_t mmWaveCellId = rrcConnectToMmWaveHeader.GetMessage ();
-      m_ueRrcSapProvider->RecvRrcConnectToMmWave(mmWaveCellId);
+      uint16_t mmWaveCellId_2 = rrcConnectToMmWaveHeader.GetMessage_secondMmWaveCellId ();
+      m_ueRrcSapProvider->RecvRrcConnectToMmWave(mmWaveCellId, mmWaveCellId_2);
       break;
     }
 }
@@ -643,12 +644,12 @@ LteEnbRrcProtocolReal::DoSendRrcConnectionSwitch (uint16_t rnti, LteRrcSap::RrcC
 }
 
 void
-LteEnbRrcProtocolReal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveId)
+LteEnbRrcProtocolReal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveId, uint16_t mmWaveId_2)
 {
   Ptr<Packet> packet = Create<Packet> ();
 
   RrcConnectToMmWaveHeader connectToMmWaveHeader;
-  connectToMmWaveHeader.SetMessage(mmWaveId);
+  connectToMmWaveHeader.SetMessage(mmWaveId, mmWaveId_2);
 
   packet->AddHeader (connectToMmWaveHeader);
 

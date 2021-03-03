@@ -136,6 +136,8 @@ public:
 
   std::vector<double> MakeFilter (std::vector<double>, std::vector<double>, std::pair <uint64_t, uint64_t > );
 
+  bool isAddtionalMmWavPhy = false; 
+
 
 
 private:

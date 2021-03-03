@@ -126,6 +126,8 @@ public:
   */
   void SetBeamformingVector (Ptr<NetDevice> ueDevice, Ptr<NetDevice> enbDevice);
 
+  bool isAdditionalMmWavePhy = false;
+
 private:
   /**
   * \breif Get complex number from a string
@@ -199,6 +201,7 @@ private:
    * \brief Get the pair of Ptr<AntennaArrayModel> of UE and eNB, given the NetDevices
    */
   antennaPair GetUeEnbAntennaPair (Ptr<NetDevice> ueDevice, Ptr<NetDevice> enbDevice) const;
+  antennaPair GetUeEnbAntennaPair2 (Ptr<NetDevice> ueDevice, Ptr<NetDevice> enbDevice) const;
 
   /**
   * \a map to store channel matrix

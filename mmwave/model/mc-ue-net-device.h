@@ -194,17 +194,33 @@ public:
 
   Ptr<MmWaveUePhy> GetMmWavePhy (uint8_t index) const;
 
+  Ptr<MmWaveUePhy> GetMmWavePhy2 (void) const;
+
+  Ptr<MmWaveUePhy> GetMmWavePhy2 (uint8_t index) const;
+
   Ptr<MmWaveUeMac> GetMmWaveMac (void) const;
 
   Ptr<MmWaveUeMac> GetMmWaveMac (uint8_t index) const;
 
+  Ptr<MmWaveUeMac> GetMmWaveMac2 (void) const;
+
+  Ptr<MmWaveUeMac> GetMmWaveMac2 (uint8_t index) const;
+
   std::map < uint8_t, Ptr<MmWaveComponentCarrierUe> > GetMmWaveCcMap ();
+
+  std::map < uint8_t, Ptr<MmWaveComponentCarrierUe> > GetMmWaveCcMap2 ();
 
   void SetMmWaveCcMap (std::map< uint8_t, Ptr<MmWaveComponentCarrierUe> > ccm);
 
+  void SetMmWaveCcMap2 (std::map< uint8_t, Ptr<MmWaveComponentCarrierUe> > ccm2);
+
   Ptr<LteUeRrc> GetMmWaveRrc () const;
 
+  Ptr<LteUeRrc> GetMmWaveRrc2 () const;
+
   Ptr<LteUeComponentCarrierManager> GetMmWaveComponentCarrierManager (void) const;
+
+  Ptr<LteUeComponentCarrierManager> GetMmWaveComponentCarrierManager2 (void) const;
 
   uint16_t GetMmWaveEarfcn () const;
 
@@ -212,7 +228,11 @@ public:
 
   void SetMmWaveTargetEnb (Ptr<MmWaveEnbNetDevice> enb);
 
+  void SetMmWaveTargetEnb2 (Ptr<MmWaveEnbNetDevice> enb);
+
   Ptr<MmWaveEnbNetDevice> GetMmWaveTargetEnb (void);
+
+  Ptr<MmWaveEnbNetDevice> GetMmWaveTargetEnb2 (void);
 
   void SetAntennaNum (uint16_t antennaNum);
 
@@ -258,9 +278,13 @@ private:
 
   // MmWave
   Ptr<MmWaveEnbNetDevice> m_mmWaveTargetEnb;
+  Ptr<MmWaveEnbNetDevice> m_mmWaveTargetEnb2;
   Ptr<LteUeRrc> m_mmWaveRrc;       // TODO consider a lightweight RRC for the mmwave part
+  Ptr<LteUeRrc> m_mmWaveRrc2;
   Ptr<LteUeComponentCarrierManager> m_mmWaveComponentCarrierManager; ///< mmWave component carrier manager
+  Ptr<LteUeComponentCarrierManager> m_mmWaveComponentCarrierManager2; 
   std::map < uint8_t, Ptr<MmWaveComponentCarrierUe> > m_mmWaveCcMap; ///< mmWave CC map
+  std::map < uint8_t, Ptr<MmWaveComponentCarrierUe> > m_mmWaveCcMap2;
   uint16_t m_mmWaveEarfcn; /**< MmWave carrier frequency */
   uint16_t m_mmWaveAntennaNum;
 

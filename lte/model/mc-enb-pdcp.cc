@@ -71,6 +71,8 @@ McEnbPdcp::McEnbPdcp ()
     m_rlcSapProvider (0),
     m_rnti (0),
     m_lcid (0),
+    m_targetCellId1 (0),
+    m_targetCellId2 (0),
     m_epcX2PdcpProvider (0),
     m_txSequenceNumber (0),
     m_rxSequenceNumber (0),
@@ -246,8 +248,16 @@ McEnbPdcp::DoTransmitPdcpSdu (Ptr<Packet> p)
     // Do not add sender time stamp: we are not interested in adding X2 delay for MC connections
     NS_LOG_INFO(this << " McEnbPdcp: Tx packet to downlink MmWave stack on remote cell " << m_ueDataParams.targetCellId);
     m_ueDataParams.ueData = p;
-    m_txPdu (m_rnti, m_lcid, p->GetSize ());
+    EpcX2Sap::UeDataParams m_ueDataParams2 = m_ueDataParams;
+    Ptr<Packet> p2 = p->Copy();
+    m_ueDataParams2.ueData = p2;
+    m_ueDataParams.targetCellId = m_targetCellId1;
+    m_ueDataParams2.targetCellId = m_targetCellId2;    
+
     m_epcX2PdcpProvider->SendMcPdcpPdu (m_ueDataParams);
+    m_epcX2PdcpProvider->SendMcPdcpPdu (m_ueDataParams2);
+    m_txPdu (m_rnti, m_lcid, p->GetSize ());
+
   }
   else
   {
@@ -311,6 +321,11 @@ McEnbPdcp::GetUseMmWaveConnection() const
   return m_useMmWaveConnection && (m_epcX2PdcpProvider != 0);
 }
 
+void
+McEnbPdcp::SetTargetCellIds(uint16_t targetCellId1, uint16_t targetCellId2){
+  m_targetCellId1 = targetCellId1;
+  m_targetCellId2 = targetCellId2;
+}
 
 
 } // namespace ns3

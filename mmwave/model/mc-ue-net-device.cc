@@ -107,10 +107,20 @@ TypeId McUeNetDevice::GetTypeId (void)
                    PointerValue (),
                    MakePointerAccessor (&McUeNetDevice::m_mmWaveRrc),
                    MakePointerChecker <LteUeRrc> ())
+    .AddAttribute ("MmWaveUeRrc2",
+                   "The RRC associated to the mmWave stack of this NetDevice",
+                   PointerValue (),
+                   MakePointerAccessor (&McUeNetDevice::m_mmWaveRrc2),
+                   MakePointerChecker <LteUeRrc> ())
     .AddAttribute ("MmWaveUeComponentCarrierManager",
                    "The MmWaveComponentCarrierManager associated to this McUeNetDevice",
                    PointerValue (),
                    MakePointerAccessor (&McUeNetDevice::m_mmWaveComponentCarrierManager),
+                   MakePointerChecker <LteUeComponentCarrierManager> ())
+    .AddAttribute ("MmWaveUeComponentCarrierManager2",
+                   "The MmWaveComponentCarrierManager associated to this McUeNetDevice",
+                   PointerValue (),
+                   MakePointerAccessor (&McUeNetDevice::m_mmWaveComponentCarrierManager2),
                    MakePointerChecker <LteUeComponentCarrierManager> ())
     .AddAttribute ("MmWaveComponentCarrierMapUe", "List of all mmWave CCs.",
                    ObjectMapValue (),
@@ -162,9 +172,21 @@ McUeNetDevice::DoInitialize (void)
       mmWaveIt->second->GetMac ()->Initialize ();
     }
 
+  std::map< uint8_t, Ptr<MmWaveComponentCarrierUe> >::iterator mmWaveIt2;
+  for (mmWaveIt2 = m_mmWaveCcMap2.begin (); mmWaveIt2 != m_mmWaveCcMap2.end (); ++mmWaveIt2)
+    {
+      mmWaveIt2->second->GetPhy ()->Initialize ();
+      mmWaveIt2->second->GetMac ()->Initialize ();
+    }
+
   if (m_mmWaveRrc != 0)
     {
       m_mmWaveRrc->Initialize ();
+    }
+
+  if (m_mmWaveRrc2 != 0)
+    {
+      m_mmWaveRrc2->Initialize ();
     }
 
   m_lteRrc->Initialize ();
@@ -194,11 +216,24 @@ McUeNetDevice::DoDispose (void)
     }
   m_mmWaveRrc = 0;
 
+  if (m_mmWaveRrc2 != 0)
+    {
+      m_mmWaveRrc2->Dispose ();
+    }
+  m_mmWaveRrc2 = 0;
+
   for (uint32_t i = 0; i < m_mmWaveCcMap.size (); i++)
     {
       m_mmWaveCcMap.at (i)->Dispose ();
     }
+
+  for (uint32_t i = 0; i < m_mmWaveCcMap2.size (); i++)
+    {
+      m_mmWaveCcMap2.at (i)->Dispose ();
+    }
+
   m_mmWaveComponentCarrierManager->Dispose ();
+  m_mmWaveComponentCarrierManager2->Dispose ();
 
   m_node = 0;
   NetDevice::DoDispose ();
@@ -401,7 +436,7 @@ McUeNetDevice::Receive (Ptr<Packet> p)
   NS_LOG_FUNCTION (this << p);
   Ipv4Header ipv4Header;
   Ipv6Header ipv6Header;
-
+  NS_LOG_INFO("size "<<p->GetSize());
   if (p->PeekHeader (ipv4Header) != 0)
     {
       NS_LOG_LOGIC ("IPv4 stack...");
@@ -455,6 +490,10 @@ McUeNetDevice::UpdateConfig (void)
           m_mmWaveRrc->SetImsi (m_imsi);
         }
 
+      if (m_mmWaveRrc2 != 0)
+        {
+          m_mmWaveRrc2->SetImsi (m_imsi);
+        }
       m_nas->SetCsgId (m_csgId);           // TODO this also handles propagation to RRC (LTE only for now)
     }
   else
@@ -585,25 +624,57 @@ McUeNetDevice::SetLteCcMap (std::map< uint8_t, Ptr<ComponentCarrierUe> > ccm)
 Ptr<MmWaveUePhy>
 McUeNetDevice::GetMmWavePhy (void) const
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveCcMap.at (0)->GetPhy ();
 }
 
 Ptr<MmWaveUePhy>
 McUeNetDevice::GetMmWavePhy (uint8_t index) const
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveCcMap.at (index)->GetPhy ();
+}
+
+Ptr<MmWaveUePhy>
+McUeNetDevice::GetMmWavePhy2 (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveCcMap2.at (0)->GetPhy ();
+}
+
+Ptr<MmWaveUePhy>
+McUeNetDevice::GetMmWavePhy2 (uint8_t index) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveCcMap2.at (index)->GetPhy ();
 }
 
 Ptr<MmWaveUeMac>
 McUeNetDevice::GetMmWaveMac (void) const
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveCcMap.at (0)->GetMac ();
 }
 
 Ptr<MmWaveUeMac>
 McUeNetDevice::GetMmWaveMac (uint8_t index) const
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveCcMap.at (index)->GetMac ();
+}
+
+Ptr<MmWaveUeMac>
+McUeNetDevice::GetMmWaveMac2 (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveCcMap2.at (0)->GetMac ();
+}
+
+Ptr<MmWaveUeMac>
+McUeNetDevice::GetMmWaveMac2 (uint8_t index) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveCcMap2.at (index)->GetMac ();
 }
 
 Ptr<LteUeComponentCarrierManager>
@@ -611,6 +682,13 @@ McUeNetDevice::GetMmWaveComponentCarrierManager (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_mmWaveComponentCarrierManager;
+}
+
+Ptr<LteUeComponentCarrierManager>
+McUeNetDevice::GetMmWaveComponentCarrierManager2 (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveComponentCarrierManager2;
 }
 
 
@@ -621,42 +699,82 @@ McUeNetDevice::GetMmWaveRrc (void) const
   return m_mmWaveRrc;
 }
 
+Ptr<LteUeRrc>
+McUeNetDevice::GetMmWaveRrc2 (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveRrc2;
+}
+
 uint16_t
 McUeNetDevice::GetMmWaveEarfcn () const
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveEarfcn;
 }
 
 void
 McUeNetDevice::SetMmWaveEarfcn (uint16_t earfcn)
 {
+  NS_LOG_FUNCTION (this);
   m_mmWaveEarfcn = earfcn;
 }
 
 void
 McUeNetDevice::SetMmWaveTargetEnb (Ptr<MmWaveEnbNetDevice> enb)
 {
+  NS_LOG_FUNCTION (this);
   m_mmWaveTargetEnb = enb;
+}
+
+void
+McUeNetDevice::SetMmWaveTargetEnb2 (Ptr<MmWaveEnbNetDevice> enb)
+{
+  NS_LOG_FUNCTION (this);
+  m_mmWaveTargetEnb2 = enb;
 }
 
 Ptr<MmWaveEnbNetDevice>
 McUeNetDevice::GetMmWaveTargetEnb (void)
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveTargetEnb;
+}
+
+Ptr<MmWaveEnbNetDevice>
+McUeNetDevice::GetMmWaveTargetEnb2 (void)
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveTargetEnb2;
 }
 
 std::map < uint8_t, Ptr<MmWaveComponentCarrierUe> >
 McUeNetDevice::GetMmWaveCcMap ()
 {
+  NS_LOG_FUNCTION (this);
   return m_mmWaveCcMap;
+}
+
+std::map < uint8_t, Ptr<MmWaveComponentCarrierUe> >
+McUeNetDevice::GetMmWaveCcMap2 ()
+{
+  NS_LOG_FUNCTION (this);
+  return m_mmWaveCcMap2;
 }
 
 void
 McUeNetDevice::SetMmWaveCcMap (std::map< uint8_t, Ptr<MmWaveComponentCarrierUe> > ccm)
 {
+  NS_LOG_FUNCTION (this);
   m_mmWaveCcMap = ccm;
 }
 
+void
+McUeNetDevice::SetMmWaveCcMap2 (std::map< uint8_t, Ptr<MmWaveComponentCarrierUe> > ccm2)
+{
+  NS_LOG_FUNCTION (this);
+  m_mmWaveCcMap2 = ccm2;
+}
 
 uint16_t
 McUeNetDevice::GetAntennaNum () const

@@ -1,0 +1,6 @@
+Waf: Entering directory `/home/hz/ns3-mmwave-cbfb03d06c15aa82d0297a105bb373db88d1bb5c/build'
+[2400/2787] Compiling src/mmwave/examples/dc0915.cc
+[2747/2787] Linking build/src/mmwave/examples/ns3-dev-dc0915-optimized
+Waf: Leaving directory `/home/hz/ns3-mmwave-cbfb03d06c15aa82d0297a105bb373db88d1bb5c/build'
+Build commands will be stored in build/compile_commands.json
+'build' finished successfully (11.649s)

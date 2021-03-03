@@ -306,7 +306,8 @@ private:
    */
   void DoSendRrcConnectionReject (uint16_t rnti, LteRrcSap::RrcConnectionReject msg);
   void DoSendRrcConnectionSwitch (uint16_t rnti, LteRrcSap::RrcConnectionSwitch msg);
-  void DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId);
+  //void DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId);
+  void DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t mmWaveCellId_2);
   /**
    * Encode handover preparation information function
    *

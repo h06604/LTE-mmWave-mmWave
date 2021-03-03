@@ -90,6 +90,7 @@ MmWaveEnbPhy::MmWaveEnbPhy (Ptr<MmWaveSpectrumPhy> dlPhy, Ptr<MmWaveSpectrumPhy>
 {
   m_enbCphySapProvider = new MemberLteEnbCphySapProvider<MmWaveEnbPhy> (this);
   m_roundFromLastUeSinrUpdate = 0;
+  isAddtionalMmWavPhy = false; 
   Simulator::ScheduleNow (&MmWaveEnbPhy::StartSubFrame, this);
 }
 
@@ -620,8 +621,12 @@ MmWaveEnbPhy::CallPathloss ()
         }
       else if (mcUeDev != 0)           // it may be a MC device
         {
-
-          uePhy = mcUeDev->GetMmWavePhy ();
+          if(isAddtionalMmWavPhy){
+            uePhy = mcUeDev->GetMmWavePhy2 ();
+          }else{
+            uePhy = mcUeDev->GetMmWavePhy ();
+          }
+          
           ueTxPower = uePhy->GetTxPower ();
         }
       else
@@ -717,9 +722,13 @@ MmWaveEnbPhy::CallPathloss ()
         }
       else if (mcUeDev != 0)           // it may be a MC device
         {                                                                                                                               // target not set yet
-          if ((mcUeDev->GetMmWaveTargetEnb () != m_netDevice) && (mcUeDev->GetMmWaveTargetEnb () != 0))
+          if ((mcUeDev->GetMmWaveTargetEnb () != m_netDevice) && (mcUeDev->GetMmWaveTargetEnb () != 0)  && !isAddtionalMmWavPhy)
             {
               txAntennaArray->ChangeBeamformingVectorPanel (mcUeDev->GetMmWaveTargetEnb ());
+            }
+          if ((mcUeDev->GetMmWaveTargetEnb2 () != m_netDevice) && (mcUeDev->GetMmWaveTargetEnb2 () != 0)  && isAddtionalMmWavPhy)
+            {
+              txAntennaArray->ChangeBeamformingVectorPanel (mcUeDev->GetMmWaveTargetEnb2 ());
             }
         }
       else
@@ -772,8 +781,12 @@ MmWaveEnbPhy::UpdateUeSinrEstimate ()
         }
       else if (mcUeDev != 0)           // it may be a MC device
         {
-
-          uePhy = mcUeDev->GetMmWavePhy ();
+          //NS_LOG_FUNCTION(this << isAddtionalMmWavPhy);
+          if(isAddtionalMmWavPhy){
+            uePhy = mcUeDev->GetMmWavePhy2 ();
+          }else{
+            uePhy = mcUeDev->GetMmWavePhy ();
+          }
           ueTxPower = uePhy->GetTxPower ();
         }
       else
@@ -877,9 +890,13 @@ MmWaveEnbPhy::UpdateUeSinrEstimate ()
         }
       else if (mcUeDev != 0)           // it may be a MC device
         {                                                                                                                               // target not set yet
-          if ((mcUeDev->GetMmWaveTargetEnb () != m_netDevice) && (mcUeDev->GetMmWaveTargetEnb () != 0))
+          if ((mcUeDev->GetMmWaveTargetEnb () != m_netDevice) && (mcUeDev->GetMmWaveTargetEnb () != 0) && !isAddtionalMmWavPhy)
             {
               txAntennaArray->ChangeBeamformingVectorPanel (mcUeDev->GetMmWaveTargetEnb ());
+            }
+          else if ((mcUeDev->GetMmWaveTargetEnb2 () != m_netDevice) && (mcUeDev->GetMmWaveTargetEnb2 () != 0) && isAddtionalMmWavPhy)
+            {
+              txAntennaArray->ChangeBeamformingVectorPanel (mcUeDev->GetMmWaveTargetEnb2 ());
             }
         }
       else
@@ -1118,7 +1135,12 @@ MmWaveEnbPhy::UpdateUeSinrEstimate ()
             }
           else if (mcUeDev != 0)               // it may be a MC device
             {
-              uePhy = mcUeDev->GetMmWavePhy ();
+              if (isAddtionalMmWavPhy){
+                uePhy = mcUeDev->GetMmWavePhy2 ();
+              }else{
+                uePhy = mcUeDev->GetMmWavePhy ();
+              }
+              
             }
           uePhy->UpdateSinrEstimate (m_cellId, m_sinrMap.find (ue->first)->second);
         }
@@ -1328,8 +1350,19 @@ MmWaveEnbPhy::StartSlot (void)
         {
           Ptr<mmwave::MmWaveUeNetDevice> ueDev = DynamicCast<mmwave::MmWaveUeNetDevice> (m_deviceMap.at (i));
           Ptr<McUeNetDevice> mcUeDev = DynamicCast<McUeNetDevice> (m_deviceMap.at (i));
-          uint64_t ueRnti = (ueDev != 0) ? (ueDev->GetPhy ()->GetRnti ()) : (mcUeDev->GetMmWavePhy ()->GetRnti ());
-          Ptr<NetDevice> associatedEnb = (ueDev != 0) ? (ueDev->GetTargetEnb ()) : (mcUeDev->GetMmWaveTargetEnb ());
+          uint64_t ueRnti; // = (ueDev != 0) ? (ueDev->GetPhy ()->GetRnti ()) : (mcUeDev->GetMmWavePhy ()->GetRnti ());
+          if (isAddtionalMmWavPhy){
+            ueRnti = (ueDev != 0) ? (ueDev->GetPhy ()->GetRnti ()) : (mcUeDev->GetMmWavePhy2 ()->GetRnti ());
+          }else{
+            ueRnti = (ueDev != 0) ? (ueDev->GetPhy ()->GetRnti ()) : (mcUeDev->GetMmWavePhy ()->GetRnti ());
+          }
+
+          Ptr<NetDevice> associatedEnb;// = (ueDev != 0) ? (ueDev->GetTargetEnb ()) : (mcUeDev->GetMmWaveTargetEnb ());
+          if (isAddtionalMmWavPhy){
+            associatedEnb = (ueDev != 0) ? (ueDev->GetTargetEnb ()) : (mcUeDev->GetMmWaveTargetEnb2 ());
+          }else{
+            associatedEnb = (ueDev != 0) ? (ueDev->GetTargetEnb ()) : (mcUeDev->GetMmWaveTargetEnb ());
+          }
 
           NS_LOG_DEBUG ("Scheduled rnti: " << currSlot.m_rnti << " ue rnti: " << ueRnti
                                            << " target eNB " << associatedEnb << " this eNB " << m_netDevice);
@@ -1427,6 +1460,8 @@ MmWaveEnbPhy::EndSubFrame (void)
 void
 MmWaveEnbPhy::SendDataChannels (Ptr<PacketBurst> pb, Time slotPrd, SlotAllocInfo& slotInfo)
 {
+  //NS_LOG_FUNCTION(this<<" "<<isAddtionalMmWavPhy);
+
   if (slotInfo.m_isOmni)
     {
       Ptr<AntennaArrayModel> antennaArray = DynamicCast<AntennaArrayModel> (GetDlSpectrumPhy ()->GetRxAntenna ());
@@ -1449,8 +1484,14 @@ MmWaveEnbPhy::SendDataChannels (Ptr<PacketBurst> pb, Time slotPrd, SlotAllocInfo
           else
             {
               Ptr<McUeNetDevice> ueMcDev = m_deviceMap.at (i)->GetObject<McUeNetDevice> ();
-              ueRnti = ueMcDev->GetMmWavePhy ()->GetRnti ();
-              associatedEnb = ueMcDev->GetMmWaveTargetEnb ();
+              if(isAddtionalMmWavPhy){
+                ueRnti = ueMcDev->GetMmWavePhy2 ()->GetRnti ();
+                associatedEnb = ueMcDev->GetMmWaveTargetEnb2 ();
+              }else{
+                ueRnti = ueMcDev->GetMmWavePhy ()->GetRnti ();
+                associatedEnb = ueMcDev->GetMmWaveTargetEnb ();
+              }
+
             }
 
           NS_LOG_DEBUG ("Scheduled rnti: " << slotInfo.m_dci.m_rnti << " ue rnti: " << ueRnti

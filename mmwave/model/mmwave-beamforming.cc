@@ -441,25 +441,27 @@ MmWaveBeamforming::SetBeamformingVector (Ptr<NetDevice> ueDevice, Ptr<NetDevice>
   NS_ASSERT_MSG (it != m_channelMatrixMap.end (), "could not find");
   Ptr<BeamformingParams> bfParams = it->second;
 
-  antennaPair antennaArrays = GetUeEnbAntennaPair (ueDevice, enbDevice);
-  Ptr<AntennaArrayModel> enbAntennaArray = antennaArrays.second;
-  Ptr<AntennaArrayModel> ueAntennaArray = antennaArrays.first;
+  if(isAdditionalMmWavePhy){
+    antennaPair antennaArrays2 = GetUeEnbAntennaPair2 (ueDevice, enbDevice);
+    Ptr<AntennaArrayModel> enbAntennaArray2 = antennaArrays2.second;
+    Ptr<AntennaArrayModel> ueAntennaArray2 = antennaArrays2.first;
 
-  /*double variable = m_uniformRV->GetValue (0, 1);
-  if(m_update && variable<0.08)
-  {
-          ueAntennaArray->SetBeamformingVectorWithDelay (bfParams->m_ueW);
-          enbAntennaArray->SetBeamformingVectorWithDelay (bfParams->m_enbW, ueDevice);
+    ueAntennaArray2->SetBeamformingVectorPanel (bfParams->m_ueW, enbDevice);
+    ueAntennaArray2->ChangeBeamformingVectorPanel (enbDevice);
+    enbAntennaArray2->SetBeamformingVectorPanel (bfParams->m_enbW, ueDevice);
+    enbAntennaArray2->ChangeBeamformingVectorPanel (ueDevice); 
 
+  }else{
+    antennaPair antennaArrays = GetUeEnbAntennaPair (ueDevice, enbDevice);
+    Ptr<AntennaArrayModel> enbAntennaArray = antennaArrays.second;
+    Ptr<AntennaArrayModel> ueAntennaArray = antennaArrays.first;
+
+    ueAntennaArray->SetBeamformingVectorPanel (bfParams->m_ueW, enbDevice);
+    ueAntennaArray->ChangeBeamformingVectorPanel (enbDevice);
+    enbAntennaArray->SetBeamformingVectorPanel (bfParams->m_enbW, ueDevice);
+    enbAntennaArray->ChangeBeamformingVectorPanel (ueDevice);
   }
-  else
-  {*/
-  ueAntennaArray->SetBeamformingVectorPanel (bfParams->m_ueW, enbDevice);
-  ueAntennaArray->ChangeBeamformingVectorPanel (enbDevice);
-  enbAntennaArray->SetBeamformingVectorPanel (bfParams->m_enbW, ueDevice);
-  enbAntennaArray->ChangeBeamformingVectorPanel (ueDevice);
 
-  //}
 }
 
 complexVector_t*
@@ -592,8 +594,12 @@ MmWaveBeamforming::DoCalcRxPowerSpectralDensity (Ptr<const SpectrumValue> txPsd,
     }
 
   Ptr<BeamformingParams> bfParams = it->second;
-
-  antennaPair antennaArrays = GetUeEnbAntennaPair (ueDevice, enbDevice);
+  antennaPair antennaArrays;
+  if(isAdditionalMmWavePhy){
+    antennaArrays = GetUeEnbAntennaPair2 (ueDevice, enbDevice);
+  }else{
+    antennaArrays = GetUeEnbAntennaPair (ueDevice, enbDevice);
+  }
   Ptr<AntennaArrayModel> enbAntennaArray = antennaArrays.second;
   Ptr<AntennaArrayModel> ueAntennaArray = antennaArrays.first;
 
@@ -671,7 +677,12 @@ MmWaveBeamforming::DoCalcRxPowerSpectralDensity (Ptr<const SpectrumValue> txPsd,
     }
   else if (ueMc != 0)
     {
-      uePhy = ueMc->GetMmWavePhy ();
+      if(isAdditionalMmWavePhy){
+        uePhy = ueMc->GetMmWavePhy2 ();
+      }else{
+        uePhy = ueMc->GetMmWavePhy ();
+      }
+      
     }
 
   if (downlink)
@@ -724,6 +735,34 @@ MmWaveBeamforming::GetUeEnbAntennaPair (Ptr<NetDevice> ueDevice, Ptr<NetDevice> 
 
   return antennaPair (ueAntennaArray, enbAntennaArray);
 }
+
+antennaPair
+MmWaveBeamforming::GetUeEnbAntennaPair2 (Ptr<NetDevice> ueDevice, Ptr<NetDevice> enbDevice) const
+{
+  Ptr<MmWaveEnbNetDevice> EnbDev =
+    DynamicCast<MmWaveEnbNetDevice> (enbDevice);
+  Ptr<mmwave::MmWaveUeNetDevice> UeDev = ueDevice->GetObject<mmwave::MmWaveUeNetDevice> ();
+  // DynamicCast<MmWaveUeNetDevice> (*i);
+  Ptr<MmWaveUePhy> uePhy;
+  Ptr<MmWaveEnbPhy> enbPhy = EnbDev->GetPhy ();
+  if (UeDev != 0)         // It actually is a MmWaveUeNetDevice
+    {
+      uePhy = UeDev->GetPhy ();
+    }
+  else           // It is a McUeNetDevice
+    {
+      Ptr<McUeNetDevice> mcUeDev = ueDevice->GetObject<McUeNetDevice> ();
+      uePhy = mcUeDev->GetMmWavePhy2 ();
+    }
+
+  Ptr<AntennaArrayModel> ueAntennaArray = DynamicCast<AntennaArrayModel> (
+      uePhy->GetDlSpectrumPhy ()->GetRxAntenna ());
+  Ptr<AntennaArrayModel> enbAntennaArray = DynamicCast<AntennaArrayModel> (
+      enbPhy->GetDlSpectrumPhy ()->GetRxAntenna ());
+
+  return antennaPair (ueAntennaArray, enbAntennaArray);
+}
+
 
 } // namespace mmwave
 

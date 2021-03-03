@@ -170,11 +170,16 @@ LteUeRrc::LteUeRrc ()
   m_cphySapProvider.push_back(0);
   m_cmacSapProvider.push_back(0);
   m_lteCmacSapProvider.push_back(0);
+  m_mmWaveCphySapProvider.push_back(0);
+  m_mmWaveCphySapProvider2.push_back(0);
   m_mmWaveCmacSapProvider.push_back(0);
+  m_mmWaveCmacSapProvider2.push_back(0);
   m_rrcSapProvider = new MemberLteUeRrcSapProvider<LteUeRrc> (this);
   m_drbPdcpSapUser = new LtePdcpSpecificLtePdcpSapUser<LteUeRrc> (this);
   m_asSapProvider = new MemberLteAsSapProvider<LteUeRrc> (this);
   m_ccmRrcSapUser = new MemberLteUeCcmRrcSapUser<LteUeRrc> (this);
+	m_isSecondaryRRC = false;
+	m_isThirdRrc = false;
 }
 
 LteUeRrc::~LteUeRrc ()
@@ -317,6 +322,11 @@ LteUeRrc::GetTypeId (void)
                       BooleanValue (false),
                       MakeBooleanAccessor (&LteUeRrc::m_isSecondaryRRC),
                       MakeBooleanChecker ())
+     .AddAttribute ("ThirdRRC",
+                      "True if this is the RRC in charge of the secondary cell (MmWaveCell) for a MC device",
+                      BooleanValue (false),
+                      MakeBooleanAccessor (&LteUeRrc::m_isThirdRrc),
+                      MakeBooleanChecker ())
      .AddAttribute ("InterRatHoCapable",
                       "True if this RRC supports hard handover between LTE and MmWave",
                       BooleanValue (false),
@@ -341,11 +351,19 @@ LteUeRrc::SetLteUeCphySapProvider (LteUeCphySapProvider * s, uint8_t index)
   NS_LOG_FUNCTION (this << s);
   m_cphySapProvider.at(index) = s;
 }
+
 void
 LteUeRrc::SetMmWaveUeCphySapProvider (LteUeCphySapProvider * s)
 {
   NS_LOG_FUNCTION (this << s);
   m_mmWaveCphySapProvider.at(0) = s;
+}
+
+void
+LteUeRrc::SetMmWaveUeCphySapProvider2 (LteUeCphySapProvider * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_mmWaveCphySapProvider2.at(0) = s;
 }
 
 LteUeCphySapUser*
@@ -392,6 +410,21 @@ LteUeRrc::SetMmWaveUeCmacSapProvider (LteUeCmacSapProvider * s, uint8_t index)
   m_mmWaveCmacSapProvider.at(index) = s;
 }
 
+void
+LteUeRrc::SetMmWaveUeCmacSapProvider2 (LteUeCmacSapProvider * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_mmWaveCmacSapProvider2.at(0) = s;
+}
+
+void
+LteUeRrc::SetMmWaveUeCmacSapProvider2 (LteUeCmacSapProvider * s, uint8_t index)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_mmWaveCmacSapProvider2.at(index) = s;
+}
+
+
 LteUeCmacSapUser*
 LteUeRrc::GetLteUeCmacSapUser ()
 {
@@ -433,6 +466,13 @@ LteUeRrc::SetMmWaveMacSapProvider (LteMacSapProvider * s)
 {
   NS_LOG_FUNCTION (this << s);
   m_mmWaveMacSapProvider = s;
+}
+
+void
+LteUeRrc::SetMmWaveMacSapProvider2 (LteMacSapProvider * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_mmWaveMacSapProvider2 = s;
 }
 
 void
@@ -521,10 +561,12 @@ LteUeRrc::AddLteCellId(uint16_t cellId)
 bool
 LteUeRrc::SwitchLowerLayerProviders (uint16_t cellId)
 {
+  NS_LOG_INFO (this <<"SwitchLowerLayer"<< cellId <<m_isMmWaveCellMap.find(cellId)->second);
   if(m_isMmWaveCellMap.find(cellId) != m_isMmWaveCellMap.end())
   {
     if(m_isMmWaveCellMap.find(cellId)->second)
     {
+      
       NS_LOG_INFO("Switch SAP to MmWave");
       //NS_LOG_LOGIC("Before switch " << m_cphySapProvider << m_cmacSapProvider << m_macSapProvider);
       m_cphySapProvider = m_mmWaveCphySapProvider;
@@ -550,17 +592,18 @@ LteUeRrc::SwitchLowerLayerProviders (uint16_t cellId)
     }
   }
   else
-  {
+  { 
     if(m_interRatHoCapable)
     {
       NS_FATAL_ERROR("Unkown cell, set it up in the helper!");
     }
     else
-    {
+    { 
       // do nothing, always use the ones set at the beginning
       return false;
     }
   }
+  
 }
 
 uint8_t
@@ -675,6 +718,7 @@ LteUeRrc::InitializeSap (void)
       for ( uint16_t i = 1; i < m_numberOfMmWaveComponentCarriers; i++)
         {
           m_mmWaveCmacSapProvider.push_back(0);
+          m_mmWaveCmacSapProvider2.push_back(0);
         }
     }
 }
@@ -750,6 +794,19 @@ LteUeRrc::DoNotifySecondaryCellConnected(uint16_t mmWaveRnti, uint16_t mmWaveCel
 }
 
 void
+LteUeRrc::DoNotifySecondaryCellConnected(uint16_t mmWaveRnti_28G,uint16_t mmWaveRnti_73G, uint16_t mmWaveCellId_28G, uint16_t mmWaveCellId_73G)
+{
+  m_mmWaveCellId_28G = mmWaveCellId_28G;//1
+  m_mmWaveCellId_73G = mmWaveCellId_73G;//2
+  //m_mmWaveCellId = mmWaveCellId_73G; 
+  m_mmWaveCellId = mmWaveCellId_73G; //2 the last connected cellID
+  m_mmWaveRnti_73 = mmWaveRnti_73G;//2
+  m_mmWaveRnti_28 = mmWaveRnti_28G;//1
+  NS_LOG_FUNCTION(this);
+  m_rrcSapUser->SendNotifySecondaryCellConnected(mmWaveRnti_73G, mmWaveCellId_73G);
+}
+
+void
 LteUeRrc::DoReceivePdcpSdu (LtePdcpSapUser::ReceivePdcpSduParameters params)
 {
   NS_LOG_FUNCTION (this);
@@ -788,6 +845,7 @@ LteUeRrc::DoNotifyRandomAccessSuccessful ()
         LteRrcSap::RrcConnectionRequest msg;
         msg.ueIdentity = m_imsi;
         msg.isMc = m_isSecondaryRRC;
+        msg.isMc_2 = m_isThirdRrc;
         m_rrcSapUser->SendRrcConnectionRequest (msg);
         m_connectionTimeout = Simulator::Schedule (m_t300,
                                                    &LteUeRrc::ConnectionTimeout,
@@ -971,11 +1029,12 @@ void
 LteUeRrc::DoRecvMasterInformationBlock (uint16_t cellId,
                                         LteRrcSap::MasterInformationBlock msg)
 {
+  NS_LOG_FUNCTION(this);
   m_dlBandwidth = msg.dlBandwidth;
   m_cphySapProvider.at(0)->SetDlBandwidth (msg.dlBandwidth);
   m_hasReceivedMib = true;
   m_mibReceivedTrace (m_imsi, m_cellId, m_rnti, cellId);
-
+  
   switch (m_state)
     {
     case IDLE_WAIT_MIB:
@@ -1174,10 +1233,10 @@ LteUeRrc::DoRecvRrcConnectionSetup (LteRrcSap::RrcConnectionSetup msg)
 }
 
 void
-LteUeRrc::DoRecvRrcConnectToMmWave (uint16_t mmWaveCellId)
+LteUeRrc::DoRecvRrcConnectToMmWave (uint16_t mmWaveCellId, uint16_t mmWaveCellId_2)
 {
   NS_LOG_FUNCTION(this << "cellId "<< mmWaveCellId);
-  m_asSapUser->NotifyConnectToMmWave(mmWaveCellId);
+  m_asSapUser->NotifyConnectToMmWave(mmWaveCellId, mmWaveCellId_2);
 }
 
 void
@@ -1205,6 +1264,7 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
           SwitchLowerLayerProviders(m_cellId); // for InterRat HO
           NS_ASSERT (mci.haveCarrierFreq);
           NS_ASSERT (mci.haveCarrierBandwidth);
+          std::cout << "hjkl";
           m_cphySapProvider.at(0)->SynchronizeWithEnb (m_cellId, mci.carrierFreq.dlCarrierFreq);
           m_cphySapProvider.at(0)->SetDlBandwidth ( mci.carrierBandwidth.dlBandwidth);
           m_cphySapProvider.at(0)->ConfigureUplink (mci.carrierFreq.ulCarrierFreq, mci.carrierBandwidth.ulBandwidth);
@@ -1224,7 +1284,7 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
           m_cphySapProvider.at(0)->SetRnti (m_rnti);
           m_lastRrcTransactionIdentifier = msg.rrcTransactionIdentifier;
           NS_ASSERT (msg.haveRadioResourceConfigDedicated);
-
+          
           // we re-establish SRB1 by creating a new entity
           // note that we can't dispose the old entity now, because
           // it's in the current stack, so we would corrupt the stack
@@ -2317,8 +2377,13 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
             rlcObjectFactory.SetTypeId (rlcTypeId);
             Ptr<LteRlc> rlc = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
             rlc->SetLteMacSapProvider (m_mmWaveMacSapProvider);
-            rlc->SetRnti (m_mmWaveRnti);
+            rlc->SetRnti (m_mmWaveRnti_28);
             rlc->SetLcId (dtamIt->logicalChannelIdentity);
+
+            Ptr<LteRlc> rlc2 = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
+            rlc2->SetLteMacSapProvider (m_mmWaveMacSapProvider2);
+            rlc2->SetRnti (m_mmWaveRnti_73);
+            rlc2->SetLcId (dtamIt->logicalChannelIdentity);
 
             struct LteUeCmacSapProvider::LogicalChannelConfig lcConfig;
             lcConfig.priority = dtamIt->logicalChannelConfig.priority;
@@ -2332,17 +2397,24 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
               m_mmWaveCmacSapProvider.at (i)->AddLc (dtamIt->logicalChannelIdentity,
                                       lcConfig,
                                       rlc->GetLteMacSapUser ());
+              m_mmWaveCmacSapProvider2.at (i)->AddLc (dtamIt->logicalChannelIdentity,
+                                      lcConfig,
+                                      rlc2->GetLteMacSapUser ());
             }
             if (rlcTypeId != LteRlcSm::GetTypeId ())
             {
-              pdcp->SetMmWaveRnti (m_mmWaveRnti);
+              pdcp->SetMmWaveRnti (m_mmWaveRnti_28,m_mmWaveRnti_73);
               pdcp->SetMmWaveRlcSapProvider (rlc->GetLteRlcSapProvider ());
+              pdcp->SetMmWaveRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
               rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+              rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
             }
             rlc->Initialize();
+            rlc2->Initialize();
 
             Ptr<RlcBearerInfo> rlcInfo = CreateObject<RlcBearerInfo>();
             rlcInfo->m_rlc = rlc;
+            rlcInfo->m_rlc_2 = rlc2;
             rlcInfo->rlcConfig.choice = dtamIt->rlcConfig.choice;
             rlcInfo->logicalChannelIdentity = dtamIt->logicalChannelIdentity;
             rlcInfo->mmWaveRnti = m_mmWaveRnti;
@@ -2364,6 +2436,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
             {
               // get the RLC buffer content and store it in this RLC
               CopyRlcBuffers(m_rlcMap.find(dtamIt->drbIdentity)->second->m_rlc, drbInfo->m_pdcp, drbInfo->m_logicalChannelIdentity);
+              CopyRlcBuffers(m_rlcMap.find(dtamIt->drbIdentity)->second->m_rlc_2, drbInfo->m_pdcp, drbInfo->m_logicalChannelIdentity);
             }
             m_rlcMap[dtamIt->drbIdentity] = rlcInfo;
             

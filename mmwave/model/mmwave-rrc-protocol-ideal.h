@@ -135,7 +135,8 @@ private:
   void DoSendRrcConnectionRelease (uint16_t rnti, LteRrcSap::RrcConnectionRelease msg);
   void DoSendRrcConnectionReject (uint16_t rnti, LteRrcSap::RrcConnectionReject msg);
   void DoSendRrcConnectionSwitch (uint16_t rnti, LteRrcSap::RrcConnectionSwitch msg);
-  void DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId);
+  //void DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId);
+  void DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t mmWaveCellId_2);
   Ptr<Packet> DoEncodeHandoverPreparationInformation (LteRrcSap::HandoverPreparationInfo msg);
   LteRrcSap::HandoverPreparationInfo DoDecodeHandoverPreparationInformation (Ptr<Packet> p);
   Ptr<Packet> DoEncodeHandoverCommand (LteRrcSap::RrcConnectionReconfiguration msg);

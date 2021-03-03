@@ -4752,6 +4752,7 @@ RrcConnectionRequestHeader::GetIsMc () const
 RrcConnectToMmWaveHeader::RrcConnectToMmWaveHeader () : RrcDlCcchMessage ()
 {
   m_mmWaveId = std::bitset<16> (0ul);
+  m_mmWaveId_2 = std::bitset<16> (0ul);
 }
 
 // Destructor
@@ -4773,6 +4774,7 @@ void
 RrcConnectToMmWaveHeader::Print (std::ostream &os) const
 {
   os << "MmWaveId:" << m_mmWaveId << std::endl;
+  os << "MmWaveId_2" << m_mmWaveId_2 << std::endl;
 }
 
 void
@@ -4784,7 +4786,7 @@ RrcConnectToMmWaveHeader::PreSerialize () const
 
   // Serialize mmWaveId : MMEC ::= BIT STRING (SIZE (16))
   SerializeBitstring (m_mmWaveId);
-
+  SerializeBitstring (m_mmWaveId_2); 
   // Finish serialization
   FinalizeSerialization ();
 }
@@ -4797,14 +4799,15 @@ RrcConnectToMmWaveHeader::Deserialize (Buffer::Iterator bIterator)
 
   // Deserialize mmWaveId
   bIterator = DeserializeBitstring (&m_mmWaveId,bIterator);
-
+  bIterator = DeserializeBitstring (&m_mmWaveId_2,bIterator);
   return GetSerializedSize ();
 }
 
 void
-RrcConnectToMmWaveHeader::SetMessage (uint16_t mmWaveId)
+RrcConnectToMmWaveHeader::SetMessage (uint16_t mmWaveId, uint16_t mmWaveId_2)
 {
   m_mmWaveId = std::bitset<16> ((uint16_t)mmWaveId);
+  m_mmWaveId_2 = std::bitset<16> ((uint16_t)mmWaveId_2);
   m_isDataSerialized = false;
 }
 
@@ -4813,6 +4816,12 @@ RrcConnectToMmWaveHeader::GetMessage () const
 {
   uint16_t mmWaveId = (uint16_t)(m_mmWaveId.to_ulong ());
   return mmWaveId;
+}
+
+uint16_t
+RrcConnectToMmWaveHeader::GetMessage_secondMmWaveCellId() const
+{
+	return (uint16_t)(m_mmWaveId_2.to_ulong());
 }
 
 //////////////////// RrcNotifySecondaryConnectedHeader class ////////////////////////

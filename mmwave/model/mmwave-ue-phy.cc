@@ -175,7 +175,7 @@ MmWaveUePhy::DoDispose (void)
 void
 MmWaveUePhy::SetUeCphySapUser (LteUeCphySapUser* s)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << s);
   m_ueCphySapUser = s;
 }
 
@@ -324,7 +324,11 @@ MmWaveUePhy::RegisterToEnb (uint16_t cellId, Ptr<MmWavePhyMacCommon> config)
     }
   else if (DynamicCast<McUeNetDevice> (m_netDevice))
     {
-      DynamicCast<McUeNetDevice> (m_netDevice)->SetMmWaveTargetEnb (enbNetDevice);
+      if(!enbNetDevice->isEnbTypeForDc){
+        DynamicCast<McUeNetDevice> (m_netDevice)->SetMmWaveTargetEnb (enbNetDevice);
+      }else{
+        DynamicCast<McUeNetDevice> (m_netDevice)->SetMmWaveTargetEnb2 (enbNetDevice);
+      }
     }
   NS_LOG_UNCOND ("UE register to enb " << m_cellId);
   // call antennaarrya to change the bf vector
@@ -396,6 +400,7 @@ MmWaveUePhy::RegisterToEnb (uint16_t cellId, Ptr<MmWavePhyMacCommon> config)
 void
 MmWaveUePhy::RegisterOtherEnb (uint16_t cellId, Ptr<MmWavePhyMacCommon> config, Ptr<MmWaveEnbNetDevice> enbNetDevice)
 {
+  NS_LOG_FUNCTION(this);
   NS_ASSERT_MSG (m_registeredEnb.find (cellId) == m_registeredEnb.end (), "Enb already registered");
   std::pair<Ptr<MmWavePhyMacCommon>, Ptr<MmWaveEnbNetDevice> > pair (config, enbNetDevice);
   m_registeredEnb[cellId] = pair;
@@ -490,7 +495,7 @@ MmWaveUePhy::ReceiveControlMessageList (std::list<Ptr<MmWaveControlMessage> > ms
         }
       else if (msg->GetMessageType () == MmWaveControlMessage::MIB)
         {
-          NS_LOG_INFO ("received MIB");
+          //NS_LOG_INFO ("received MIB");
           NS_ASSERT (m_cellId > 0);
           Ptr<MmWaveMibMessage> msg2 = DynamicCast<MmWaveMibMessage> (msg);
           m_ueCphySapUser->RecvMasterInformationBlock (m_cellId, msg2->GetMib ());
@@ -826,6 +831,7 @@ MmWaveUePhy::PhyDataPacketReceived (Ptr<Packet> p)
 void
 MmWaveUePhy::DelayPhyDataPacketReceived (Ptr<Packet> p)
 {
+  NS_LOG_FUNCTION(this);
   m_phySapUser->ReceivePhyPdu (p);
 }
 

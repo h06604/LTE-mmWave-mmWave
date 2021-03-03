@@ -324,6 +324,7 @@ MmWaveEnbRrcProtocolIdeal::DoSendSystemInformation (uint16_t cellId, LteRrcSap::
   NS_LOG_FUNCTION (this << cellId);
   // walk list of all nodes to get UEs with this cellId
   Ptr<LteUeRrc> ueRrc;
+  Ptr<LteUeRrc> ueRrc2;
   for (NodeList::Iterator i = NodeList::Begin (); i != NodeList::End (); ++i)
     {
       Ptr<Node> node = *i;
@@ -353,6 +354,7 @@ MmWaveEnbRrcProtocolIdeal::DoSendSystemInformation (uint16_t cellId, LteRrcSap::
                 {
                   NS_FATAL_ERROR ("-----------This implementation does not support McUeNetDevice. Use MmWaveRrcProtocolReal.");
                   ueRrc = mcUeDev->GetMmWaveRrc ();
+                  ueRrc2 = mcUeDev->GetMmWaveRrc2 ();
                   if (ueRrc != 0) // actually is using 2 connections
                     {
                       NS_LOG_LOGIC ("considering UE IMSI " << mcUeDev->GetImsi () << " that has cellId " << ueRrc->GetCellId ());
@@ -367,6 +369,20 @@ MmWaveEnbRrcProtocolIdeal::DoSendSystemInformation (uint16_t cellId, LteRrcSap::
                                                msg);
                         }
                     }
+                  else if (ueRrc2)
+                  {
+                      NS_LOG_LOGIC ("considering UE IMSI " << mcUeDev->GetImsi () << " that has cellId " << ueRrc->GetCellId ());
+                      NS_LOG_LOGIC ("UE cellId " << (uint32_t)ueRrc2->GetCellId () << " ENB cellId " << (uint32_t)cellId);
+                      if (ueRrc2->GetCellId () == m_cellId)
+                        {
+                          NS_LOG_LOGIC ("sending SI to IMSI " << mcUeDev->GetImsi ());
+                          ueRrc2->GetLteUeRrcSapProvider ()->RecvSystemInformation (msg);
+                          Simulator::Schedule (RRC_IDEAL_MSG_DELAY,
+                                               &LteUeRrcSapProvider::RecvSystemInformation,
+                                               ueRrc2->GetLteUeRrcSapProvider (),
+                                               msg);
+                        }                 
+                  }
                   else // it may have just a double stack up to MAC layer
                     {
                       ueRrc = mcUeDev->GetLteRrc ();
@@ -453,12 +469,12 @@ MmWaveEnbRrcProtocolIdeal::DoSendRrcConnectionSwitch (uint16_t rnti, LteRrcSap::
 }
 
 void
-MmWaveEnbRrcProtocolIdeal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId)
+MmWaveEnbRrcProtocolIdeal::DoSendRrcConnectToMmWave (uint16_t rnti, uint16_t mmWaveCellId, uint16_t mmWaveCellId_2)
 {
   Simulator::Schedule (RRC_IDEAL_MSG_DELAY,
                        &LteUeRrcSapProvider::RecvRrcConnectToMmWave,
                        GetUeRrcSapProvider (rnti),
-                       mmWaveCellId);
+                       mmWaveCellId, mmWaveCellId_2);
 }
 
 /*

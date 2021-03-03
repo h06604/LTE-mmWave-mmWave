@@ -82,7 +82,7 @@ void
 LteRlcTm::DoTransmitPdcpPdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
-
+  NS_LOG_FUNCTION(p);
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
     {
       /** Store arrival time */
@@ -181,7 +181,7 @@ void
 LteRlcTm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
-
+  NS_LOG_INFO (rxPduParams.p);
   // Receiver timestamp
   RlcTag rlcTag;
   Time delay;

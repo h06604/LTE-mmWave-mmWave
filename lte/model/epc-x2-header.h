@@ -892,8 +892,14 @@ public:
   uint16_t GetSourceCellId () const;
   void SetSourceCellId (uint16_t sourceCellId);
 
+  uint16_t GetSecondCellId () const;
+  void SetSecondCellId (uint16_t secondCellId);
+
   uint32_t GetLengthOfIes () const;
   uint32_t GetNumberOfIes () const;
+
+  void SetRnti (uint16_t);
+  uint16_t GetRnti () const; 
 
 private:
   uint32_t          m_numberOfIes;
@@ -906,6 +912,8 @@ private:
 
   std::map <uint64_t, double> m_map;
   uint16_t m_sourceCellId;
+  uint16_t m_secondCellId; 
+  uint16_t m_rnti; 
 };
 
 class EpcX2ConnectionSwitchHeader : public Header

@@ -66,6 +66,7 @@ TypeId MmWaveNetDevice::GetTypeId ()
 MmWaveNetDevice::MmWaveNetDevice (void)
 {
   NS_LOG_FUNCTION (this);
+  isEnbTypeForDc = false;
 }
 
 

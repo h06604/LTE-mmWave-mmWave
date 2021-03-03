@@ -178,6 +178,8 @@ public:
 
   void SetHarqPhyModule (Ptr<MmWaveHarqPhy> harq);
 
+  bool isAdditionalMmWave = false;
+
 
 private:
   void ChangeState (State newState);

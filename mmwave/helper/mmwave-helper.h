@@ -116,6 +116,7 @@ public:
   NetDeviceContainer InstallInterRatHoCapableUeDevice (NodeContainer c);
   NetDeviceContainer InstallEnbDevice (NodeContainer c);
   NetDeviceContainer InstallLteEnbDevice (NodeContainer c);
+  NetDeviceContainer InstallFakeEnbDevice (NodeContainer c);
   void SetAntenna (uint16_t Nrx, uint16_t Ntx);
   void SetPathlossModelType (std::string type);
   void SetChannelModelType (std::string type);
@@ -129,7 +130,7 @@ public:
    * \param ccmap the component carrier map
    */
   void SetCcPhyParams ( std::map< uint8_t, MmWaveComponentCarrier> ccMapParams);
-
+  void SetCcPhyParams2 ( std::map< uint8_t, MmWaveComponentCarrier> ccMapParams);
   /**
    * This method is used to get the MmWaveComponentCarrier map.
    *
@@ -154,6 +155,7 @@ public:
    * Attach MC ueDevices to the closest LTE enbDevice, register all MmWave eNBs to the MmWaveUePhy
    */
   void AttachToClosestEnb (NetDeviceContainer ueDevices, NetDeviceContainer mmWaveEnbDevices, NetDeviceContainer lteEnbDevices);
+  void AttachToClosestEnb (NetDeviceContainer ueDevices, NetDeviceContainer mmWaveEnbDevices, NetDeviceContainer mmWaveEnbDevices2, NetDeviceContainer lteEnbDevices);
 
   /**
    * Attach MC ueDevices to the closest MmWave eNB device, register all MmWave eNBs to the MmWaveUePhy,
@@ -286,10 +288,12 @@ private:
   Ptr<NetDevice> InstallSingleMcUeDevice (Ptr<Node> n);
   Ptr<NetDevice> InstallSingleEnbDevice (Ptr<Node> n);
   Ptr<NetDevice> InstallSingleLteEnbDevice (Ptr<Node> n);
+  Ptr<NetDevice> InstallSingleFakeEnbDevice (Ptr<Node> n);
   Ptr<NetDevice> InstallSingleInterRatHoCapableUeDevice (Ptr<Node> n);
 
   void AttachToClosestEnb (Ptr<NetDevice> ueDevice, NetDeviceContainer enbDevices);
   void AttachMcToClosestEnb (Ptr<NetDevice> ueDevice, NetDeviceContainer mmWaveEnbDevices, NetDeviceContainer lteEnbDevices);
+  void AttachMcToClosestEnb2 (Ptr<NetDevice> ueDevice, NetDeviceContainer mmWaveEnbDevices, NetDeviceContainer mmWaveEnbDevices2, NetDeviceContainer lteEnbDevices);
   void AttachIrToClosestEnb (Ptr<NetDevice> ueDevice, NetDeviceContainer mmWaveEnbDevices, NetDeviceContainer lteEnbDevices);
 
   //void EnableDlPhyTrace ();
@@ -304,17 +308,18 @@ private:
   //void EnableMcTraces (void);
   Ptr<McStatsCalculator> GetMcStats (void);
 
-  std::map< uint8_t, Ptr<SpectrumChannel> > m_channel;       // mmWave TDD channel
+  std::map< uint8_t, Ptr<SpectrumChannel> > m_channel, m_channel2;       // mmWave TDD channel
   Ptr<SpectrumChannel> m_downlinkChannel;       /// The downlink LTE channel used in the simulation.
   Ptr<SpectrumChannel> m_uplinkChannel;         /// The uplink LTE channel used in the simulation.
 
-  std::map< uint8_t, Ptr<MmWaveBeamforming> > m_beamforming;
-  std::map< uint8_t, Ptr<MmWaveLosTracker> > m_losTracker;
-  std::map< uint8_t, Ptr<MmWaveChannelMatrix> > m_channelMatrix;
-  std::map< uint8_t, Ptr<MmWaveChannelRaytracing> > m_raytracing;
-  std::map< uint8_t, Ptr<MmWave3gppChannel> > m_3gppChannel;
+  std::map< uint8_t, Ptr<MmWaveBeamforming> > m_beamforming, m_beamforming2;
+  std::map< uint8_t, Ptr<MmWaveLosTracker> > m_losTracker, m_losTracker2;
+  std::map< uint8_t, Ptr<MmWaveChannelMatrix> > m_channelMatrix, m_channelMatrix2;
+  std::map< uint8_t, Ptr<MmWaveChannelRaytracing> > m_raytracing, m_raytracing2;
+  std::map< uint8_t, Ptr<MmWave3gppChannel> > m_3gppChannel, m_3gppChannel2;
+  std::map <uint64_t, Ptr<MmWaveEnbPhy>> CellIdMmWaveEnbPhy;
 
-  std::map< uint8_t, Ptr<Object> > m_pathlossModel;
+  std::map< uint8_t, Ptr<Object> > m_pathlossModel, m_pathlossModel2;
   std::string m_pathlossModelType;
   Ptr<Object> m_downlinkPathlossModel;            /// The path loss model used in the LTE downlink channel.
   Ptr<Object> m_uplinkPathlossModel;         /// The path loss model used in the LTE uplink channel.
@@ -401,6 +406,7 @@ private:
 * This contains all the informations about each mmWave component carrier
 */
   std::map< uint8_t, MmWaveComponentCarrier > m_componentCarrierPhyParams;
+  std::map< uint8_t, MmWaveComponentCarrier > m_componentCarrierPhyParams2;
 
   /**
    * Number of LTE component carriers that will be installed by default at LTE
@@ -419,6 +425,7 @@ private:
    * is used
   **/
   std::map< uint8_t, bool > m_3gppBlockage;
+  std::map< uint8_t, bool > m_3gppBlockage2;
 
 };
 

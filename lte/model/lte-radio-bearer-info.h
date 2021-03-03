@@ -101,6 +101,7 @@ public:
   Ipv4Address m_transportLayerAddress; /**< IP Address of the SGW, see 36.423 9.2.1 */
   EpcX2Sap::RlcSetupRequest m_rlcSetupRequest; // complete bearer with related info, for MC functionalities
   bool m_isMc; // true if a bearer is split
+  bool m_isMc_2;
 };
 
 class RlcBearerInfo : public Object
@@ -121,6 +122,7 @@ public:
     LteRrcSap::LogicalChannelConfig logicalChannelConfig;
     LteEnbCmacSapProvider::LcInfo lcinfo;
     Ptr<LteRlc> m_rlc;
+    Ptr<LteRlc> m_rlc_2;
 };
 
 

@@ -126,7 +126,7 @@ public:
    */
   static TypeId GetTypeId (void);
   virtual void DoDispose (void);
-
+  bool isAdditionalMmWave=false;
 
   /**
    * \param s the X2 SAP User to be used by this EPC X2 entity
@@ -142,6 +142,8 @@ public:
    * \return the X2 Pdcp Provider interface offered by this EPC X2 entity
    */
   EpcX2PdcpProvider* GetEpcX2PdcpProvider ();
+  
+  void SetEpcX2PdcpUser(EpcX2PdcpUser *s);
 
   /**
    * \return the X2 Rlc Provider interface offered by this EPC X2 entity
@@ -153,13 +155,14 @@ public:
    * \param the X2 Rlc User interface associated to the teid
    */
   void SetMcEpcX2RlcUser (uint32_t teid, EpcX2RlcUser* rlcUser);
+  void SetMcEpcX2RlcUser2 (uint32_t teid, EpcX2RlcUser* rlcUser);
 
   /**
    * \param the teid of the MC device
    * \param the X2 Pdcp User interface associated to the teid
    */
   void SetMcEpcX2PdcpUser (uint32_t teid, EpcX2PdcpUser* pdcpUser);
-
+  void SetMcEpcX2PdcpUser2 (uint32_t teid, EpcX2PdcpUser* pdcpUser);
 
   /**
    * Add an X2 interface to this EPC X2 entity
@@ -264,12 +267,18 @@ protected:
    * Map the PdcpUser to a certain teid
    */
   std::map < uint32_t, EpcX2PdcpUser* > m_x2PdcpUserMap;
+  std::map < uint32_t, EpcX2PdcpUser* > m_x2PdcpUserMap2;
+
   // The PdcpProvider offered by this X2 interface
   EpcX2PdcpProvider* m_x2PdcpProvider;
+  EpcX2PdcpUser * m_x2PdcpUser;
+
   /**
    * Map the RlcUser to a certain teid
    */
   std::map < uint32_t, EpcX2RlcUser* > m_x2RlcUserMap;
+  std::map < uint32_t, EpcX2RlcUser* > m_x2RlcUserMap2;
+
   // The RlcProvider offered by this X2 interface
   EpcX2RlcProvider* m_x2RlcProvider;
 

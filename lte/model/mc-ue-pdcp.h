@@ -55,7 +55,8 @@ public:
    *
    * \param rnti
    */
-  void SetMmWaveRnti (uint16_t rnti);
+  void SetMmWaveRnti (uint16_t rnti1);
+  void SetMmWaveRnti (uint16_t rnti1, uint16_t rnti2);
 
   /**
    * Set the RNTI of the UE in the LTE eNB
@@ -105,6 +106,7 @@ public:
    * \param s the MmWave RLC SAP Provider to be used by this MC_PDCP
    */
   void SetMmWaveRlcSapProvider (LteRlcSapProvider * s);
+  void SetMmWaveRlcSapProvider2 (LteRlcSapProvider * s);
 
   static const uint16_t MAX_PDCP_SN = 4096;
 
@@ -175,10 +177,12 @@ protected:
   LteRlcSapUser* m_rlcSapUser;
   LteRlcSapProvider* m_rlcSapProvider;
   LteRlcSapProvider* m_mmWaveRlcSapProvider;
+  LteRlcSapProvider* m_mmWaveRlcSapProvider2;
 
   uint16_t m_rnti;
   uint8_t m_lcid;
-  uint16_t m_mmWaveRnti;
+  uint16_t m_mmWaveRnti_28;
+  uint16_t m_mmWaveRnti_73;
 
   /**
    * Used to inform of a PDU delivery to the RLC SAP provider.

@@ -2460,8 +2460,8 @@ EpcX2ResourceStatusUpdateHeader::GetNumberOfIes () const
 NS_OBJECT_ENSURE_REGISTERED (EpcX2UeImsiSinrUpdateHeader);
 
 EpcX2UeImsiSinrUpdateHeader::EpcX2UeImsiSinrUpdateHeader ()
-  : m_numberOfIes (1 + 1),
-    m_headerLength (2 + 2)
+  : m_numberOfIes (1 + 1 + 1),
+    m_headerLength (2 + 2 + 2)
 {
   m_map.clear ();
 }
@@ -2501,8 +2501,9 @@ EpcX2UeImsiSinrUpdateHeader::Serialize (Buffer::Iterator start) const
 {
   Buffer::Iterator i = start;
 
-  i.WriteHtonU16 (m_sourceCellId);
-
+  i.WriteU8 (m_sourceCellId);
+  i.WriteU8 (m_secondCellId); 
+  i.WriteU16(m_rnti);
   std::map <uint64_t, double>::size_type sz = m_map.size ();
   i.WriteHtonU16 (sz);              // number of elements in the map
 
@@ -2520,9 +2521,11 @@ EpcX2UeImsiSinrUpdateHeader::Deserialize (Buffer::Iterator start)
 
   m_headerLength = 0;
 
-  m_sourceCellId = i.ReadNtohU16();
-  m_headerLength += 2;
-  m_numberOfIes = 1;
+  m_sourceCellId = i.ReadU8();
+  m_secondCellId = i.ReadU8();
+  m_rnti = i.ReadU16();
+  m_headerLength += 4;
+  m_numberOfIes = 2;
 
   int sz = i.ReadNtohU16 ();
   for (int j = 0; j < sz; j++)
@@ -2541,7 +2544,9 @@ EpcX2UeImsiSinrUpdateHeader::Deserialize (Buffer::Iterator start)
 void
 EpcX2UeImsiSinrUpdateHeader::Print (std::ostream &os) const
 {
-  os << "SourceCellId " << m_sourceCellId;
+  os << "SourceCellId " << m_sourceCellId << " ";
+  os << "SecondCellId " << m_secondCellId << " ";
+  os<<"m_rnti" << m_rnti; 
   for(std::map<uint64_t, double>::const_iterator iter = m_map.begin(); iter != m_map.end(); ++iter)
   {
     os << " Imsi " << iter->first << " sinr " << 10*std::log10(iter->second);
@@ -2558,6 +2563,30 @@ void
 EpcX2UeImsiSinrUpdateHeader::SetSourceCellId(uint16_t cellId)
 {
   m_sourceCellId = cellId;
+}
+
+void
+EpcX2UeImsiSinrUpdateHeader::SetSecondCellId(uint16_t cellId)
+{
+ m_secondCellId = cellId;
+}
+
+uint16_t
+EpcX2UeImsiSinrUpdateHeader::GetSecondCellId () const
+{
+  return m_secondCellId;
+}
+
+uint16_t
+EpcX2UeImsiSinrUpdateHeader::GetRnti() const
+{
+	return m_rnti;
+}
+
+void
+EpcX2UeImsiSinrUpdateHeader::SetRnti(uint16_t rnti)
+{
+	m_rnti = rnti;
 }
 
 std::map <uint64_t, double>

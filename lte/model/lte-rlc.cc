@@ -154,6 +154,17 @@ LteRlc::SetRnti (uint16_t rnti)
 }
 
 void
+LteRlc::SetImsi(uint16_t imsi){
+	m_imsi = imsi; 
+}
+
+void
+LteRlc::SetDrbId(uint8_t drbid){
+	m_drbId = drbid;
+
+}
+
+void
 LteRlc::SetLcId (uint8_t lcId)
 {
   NS_LOG_FUNCTION (this << (uint32_t) lcId);
