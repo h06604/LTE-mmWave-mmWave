@@ -4352,7 +4352,7 @@ LteEnbRrc::TriggerUeAssociationUpdate()
         }
         else if(m_handoverMode == FIXED_TTT || m_handoverMode == DYNAMIC_TTT)
         {
-          TttBasedHandover(imsiIter, sinrDifference, maxSinrCellId, maxSinrDb);
+          //TttBasedHandover(imsiIter, sinrDifference, maxSinrCellId, maxSinrDb);
           //TttBasedHandover_mmWave1(imsiIter, sinrDifference, maxSinrCellId, maxSinrDb);
           //TttBasedHandover_mmWave2(imsiIter, sinrDifference2, maxSinrCellId2, maxSinrDb2);
         }
